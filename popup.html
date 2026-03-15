@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  :root {
+    --bg: #fafaf9;
+    --bg2: #f5f5f4;
+    --bg3: #e7e5e4;
+    --text: #1c1917;
+    --text2: #57534e;
+    --text3: #a8a29e;
+    --accent: #2563eb;
+    --accent-light: #dbeafe;
+    --accent-dark: #1d4ed8;
+    --green: #16a34a;
+    --green-light: #dcfce7;
+    --orange: #ea580c;
+    --orange-light: #fff7ed;
+    --border: #e7e5e4;
+    --radius: 10px;
+  }
+
+  body {
+    width: 440px;
+    max-height: 580px;
+    font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-y: auto;
+  }
+
+  /* Header */
+  .header {
+    background: #fff;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .logo {
+    width: 30px; height: 30px;
+    background: var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 800; font-size: 13px; color: #fff;
+    letter-spacing: -0.5px;
+  }
+  .header-text h1 { font-size: 15px; font-weight: 700; letter-spacing: -0.3px; }
+  .header-text p { font-size: 11px; color: var(--text3); font-weight: 500; }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 2px;
+    padding: 8px 16px;
+    background: #fff;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    flex: 1;
+    padding: 8px 4px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text3);
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.15s;
+    border: none;
+    background: none;
+    font-family: inherit;
+  }
+  .tab:hover { color: var(--text2); background: var(--bg2); }
+  .tab.active { color: var(--accent); background: var(--accent-light); }
+
+  /* Tab panels */
+  .panel { display: none; padding: 12px 16px 16px; }
+  .panel.active { display: block; }
+
+  /* Editor area */
+  .editor-wrap {
+    position: relative;
+    margin-bottom: 10px;
+  }
+  textarea {
+    width: 100%;
+    min-height: 140px;
+    padding: 12px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--text);
+    background: #fff;
+    resize: vertical;
+    transition: border-color 0.15s;
+    outline: none;
+  }
+  textarea:focus { border-color: var(--accent); }
+  textarea::placeholder { color: var(--text3); }
+
+  .editor-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 6px;
+  }
+  .char-count {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text3);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .char-count.warn { color: var(--orange); }
+  .char-count.over { color: #dc2626; }
+
+  /* Format toolbar */
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-bottom: 12px;
+  }
+  .tool-btn {
+    padding: 6px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text2);
+    background: #fff;
+    cursor: pointer;
+    transition: all 0.12s;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    white-space: nowrap;
+  }
+  .tool-btn:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .tool-btn:active { transform: scale(0.97); }
+  .tool-btn.font-btn { font-family: serif; }
+
+  /* Section labels */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    margin: 14px 0 8px;
+  }
+  .section-label:first-child { margin-top: 0; }
+
+  /* Emoji grid */
+  .emoji-grid {
+    display: grid;
+    grid-template-columns: repeat(10, 1fr);
+    gap: 2px;
+    margin-bottom: 10px;
+  }
+  .emoji-btn {
+    width: 100%;
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.1s;
+  }
+  .emoji-btn:hover { background: var(--bg3); transform: scale(1.15); }
+
+  /* Emoji category tabs */
+  .emoji-cats {
+    display: flex;
+    gap: 2px;
+    margin-bottom: 8px;
+    overflow-x: auto;
+  }
+  .emoji-cat {
+    padding: 5px 10px;
+    font-size: 14px;
+    border: none;
+    background: none;
+    border-radius: 6px;
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+  .emoji-cat:hover { background: var(--bg3); }
+  .emoji-cat.active { background: var(--accent-light); }
+
+  /* Template cards */
+  .template-card {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 12px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .template-card:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(37,99,235,0.08); }
+  .template-card h3 {
+    font-size: 13px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .template-card p {
+    font-size: 11.5px;
+    color: var(--text2);
+    line-height: 1.55;
+    white-space: pre-line;
+  }
+  .template-tag {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .template-tag.hook { background: #fef3c7; color: #92400e; }
+  .template-tag.story { background: #dbeafe; color: #1e40af; }
+  .template-tag.list { background: #dcfce7; color: #166534; }
+  .template-tag.cta { background: #fce7f3; color: #9d174d; }
+
+  /* Actions row */
+  .actions {
+    display: flex;
+    gap: 6px;
+    margin-top: 12px;
+  }
+  .btn-primary {
+    flex: 1;
+    padding: 10px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-primary:hover { background: var(--accent-dark); }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-secondary {
+    padding: 10px 16px;
+    background: #fff;
+    color: var(--text2);
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-secondary:hover { border-color: var(--text3); }
+
+  .btn-success {
+    background: var(--green) !important;
+  }
+
+  /* Preview */
+  .preview-box {
+    background: #fff;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    font-size: 13.5px;
+    line-height: 1.65;
+    color: var(--text);
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 100px;
+    max-height: 300px;
+    overflow-y: auto;
+  }
+
+  /* Separator picker */
+  .sep-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    margin-bottom: 10px;
+  }
+  .sep-btn {
+    padding: 8px 4px;
+    border: 1.5px solid var(--border);
+    border-radius: 8px;
+    font-size: 11px;
+    text-align: center;
+    background: #fff;
+    cursor: pointer;
+    font-family: 'JetBrains Mono', monospace;
+    transition: all 0.12s;
+    color: var(--text2);
+  }
+  .sep-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Hashtag suggestions */
+  .hashtag-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .hashtag {
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--bg2);
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.12s;
+    border: none;
+    font-family: inherit;
+  }
+  .hashtag:hover { background: var(--accent-light); color: var(--accent); }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 12px;
+    left: 50%;
+    transform: translateX(-50%) translateY(10px);
+    background: var(--text);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 8px;
+    opacity: 0;
+    transition: all 0.25s;
+    pointer-events: none;
+    z-index: 99;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--bg3); border-radius: 2px; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo">Le</div>
+  <div class="header-text">
+    <h1>LinkeEdit</h1>
+    <p>Format posts that stand out</p>
+  </div>
+</div>
+
+<div class="tabs">
+  <button class="tab active" data-tab="format">Format</button>
+  <button class="tab" data-tab="emoji">Emojis</button>
+  <button class="tab" data-tab="templates">Templates</button>
+  <button class="tab" data-tab="preview">Preview</button>
+</div>
+
+<!-- FORMAT TAB -->
+<div class="panel active" id="tab-format">
+  <div class="section-label">Your post</div>
+  <div class="editor-wrap">
+    <textarea id="mainEditor" placeholder="Write or paste your LinkedIn post here..."></textarea>
+    <div class="editor-footer">
+      <span class="char-count" id="charCount">0 / 3,000</span>
+      <span class="char-count" id="lineCount">0 lines</span>
+    </div>
+  </div>
+
+  <div class="section-label">Text styles (Unicode)</div>
+  <div class="toolbar" id="fontToolbar">
+    <button class="tool-btn" data-font="bold" title="Bold text">𝗕 Bold</button>
+    <button class="tool-btn" data-font="italic" title="Italic text">𝘐 Italic</button>
+    <button class="tool-btn" data-font="boldItalic" title="Bold italic">𝘽𝙄</button>
+    <button class="tool-btn" data-font="monospace" title="Monospace">𝙼 Mono</button>
+    <button class="tool-btn" data-font="script" title="Script font">𝒮𝒸𝓇𝒾𝓅𝓉</button>
+    <button class="tool-btn" data-font="fraktur" title="Fraktur / Gothic">𝔉𝔯𝔞𝔨𝔱𝔲𝔯</button>
+    <button class="tool-btn" data-font="doubleStruck" title="Double-struck">𝔻𝕓𝕝</button>
+    <button class="tool-btn" data-font="circled" title="Circled letters">Ⓒⓘⓡⓒ</button>
+    <button class="tool-btn" data-font="squared" title="Squared letters">🅂🅀🅁</button>
+    <button class="tool-btn" data-font="smallCaps" title="Small caps">ꜱᴍᴀʟʟ</button>
+    <button class="tool-btn" data-font="strikethrough" title="Strikethrough">S̶t̶r̶i̶k̶e̶</button>
+    <button class="tool-btn" data-font="underline" title="Underline">U̲n̲d̲e̲r̲</button>
+  </div>
+
+  <div class="section-label">Separators & Bullets</div>
+  <div class="sep-grid" id="sepGrid">
+    <button class="sep-btn" data-sep="─────────">━━━━</button>
+    <button class="sep-btn" data-sep="• ">• Bullet</button>
+    <button class="sep-btn" data-sep="→ ">→ Arrow</button>
+    <button class="sep-btn" data-sep="✦ ">✦ Star</button>
+    <button class="sep-btn" data-sep="▸ ">▸ Play</button>
+    <button class="sep-btn" data-sep="◆ ">◆ Diamond</button>
+    <button class="sep-btn" data-sep="⟡ ">⟡ Sparkle</button>
+    <button class="sep-btn" data-sep="│ ">│ Line</button>
+    <button class="sep-btn" data-sep="◇ ">◇ Hollow</button>
+    <button class="sep-btn" data-sep="⁃ ">⁃ Dash</button>
+    <button class="sep-btn" data-sep="꘎꘎꘎꘎꘎꘎꘎꘎꘎">꘎꘎꘎꘎</button>
+    <button class="sep-btn" data-sep="⌁⌁⌁⌁⌁⌁⌁⌁⌁">⌁⌁⌁⌁</button>
+  </div>
+
+  <div class="section-label">Quick hashtags</div>
+  <div class="hashtag-row" id="hashtagRow">
+    <button class="hashtag">#Leadership</button>
+    <button class="hashtag">#Startups</button>
+    <button class="hashtag">#Tech</button>
+    <button class="hashtag">#AI</button>
+    <button class="hashtag">#Productivity</button>
+    <button class="hashtag">#Growth</button>
+    <button class="hashtag">#Career</button>
+    <button class="hashtag">#SaaS</button>
+    <button class="hashtag">#Marketing</button>
+    <button class="hashtag">#Design</button>
+    <button class="hashtag">#WebDev</button>
+    <button class="hashtag">#Hiring</button>
+  </div>
+
+  <div class="actions">
+    <button class="btn-primary" id="copyBtn">Copy to Clipboard</button>
+    <button class="btn-secondary" id="clearBtn">Clear</button>
+  </div>
+</div>
+
+<!-- EMOJI TAB -->
+<div class="panel" id="tab-emoji">
+  <div class="emoji-cats" id="emojiCats"></div>
+  <div class="emoji-grid" id="emojiGrid"></div>
+  <div class="section-label" style="margin-top:8px">Click to insert at cursor or append to post</div>
+</div>
+
+<!-- TEMPLATES TAB -->
+<div class="panel" id="tab-templates">
+  <div class="section-label">Hook starters</div>
+  <div id="hookTemplates"></div>
+
+  <div class="section-label">Post frameworks</div>
+  <div id="frameworkTemplates"></div>
+</div>
+
+<!-- PREVIEW TAB -->
+<div class="panel" id="tab-preview">
+  <div class="section-label">LinkedIn preview</div>
+  <div class="preview-box" id="previewBox">Start typing in the Format tab to see a preview...</div>
+  <div class="editor-footer" style="margin-top:8px">
+    <span class="char-count" id="previewCharCount">0 / 3,000</span>
+  </div>
+  <div class="actions">
+    <button class="btn-primary" id="previewCopyBtn">Copy to Clipboard</button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "LinkeEdit — LinkedIn Post Formatter & Toolkit",
+  "version": "1.0.0",
+  "description": "Bold, italic, special fonts, emojis, post templates, hooks, and formatting tools that LinkedIn doesn't give you. Write posts that stand out.",
+  "permissions": ["activeTab", "clipboardWrite", "clipboardRead", "storage"],
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.linkedin.com/*"],
+      "css": ["content.css"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "background": {
+    "service_worker": "background.js"
+  }
+}

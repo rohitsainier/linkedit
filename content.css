@@ -1,0 +1,94 @@
+/* LinkeEdit — Injected LinkedIn Toolbar */
+
+#linkedit-float-bar {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 99999;
+  display: none;
+}
+
+#linkedit-float-bar.active {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-end;
+}
+
+#linkedit-fab {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  background: #2563eb;
+  border: none;
+  color: #fff;
+  font-size: 18px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(37,99,235,0.35);
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+#linkedit-fab:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 24px rgba(37,99,235,0.45);
+}
+
+#linkedit-mini-toolbar {
+  display: none;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  flex-wrap: wrap;
+  gap: 4px;
+  max-width: 280px;
+}
+#linkedit-mini-toolbar.open { display: flex; }
+
+.le-mini-btn {
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #374151;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.1s;
+  white-space: nowrap;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+}
+.le-mini-btn:hover {
+  border-color: #2563eb;
+  color: #2563eb;
+  background: #eff6ff;
+}
+
+/* Toast */
+#linkedit-toast {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  z-index: 999999;
+  background: #18181b;
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 8px 18px;
+  border-radius: 8px;
+  box-shadow: 0 6px 24px rgba(0,0,0,0.3);
+  opacity: 0;
+  transform: translateY(8px);
+  transition: all 0.25s;
+  pointer-events: none;
+}
+#linkedit-toast.show {
+  opacity: 1;
+  transform: translateY(0);
+}
