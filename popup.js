@@ -52,22 +52,51 @@ const FONTS = {
   }
 };
 
+// ─── Build reverse lookup: styled char → plain ASCII ───
+const REVERSE_MAP = new Map();
+const PLAIN_UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const PLAIN_LOWER = 'abcdefghijklmnopqrstuvwxyz';
+const PLAIN_DIGITS = '0123456789';
+
+for (const fontName of Object.keys(FONTS)) {
+  const font = FONTS[fontName];
+  const uChars = [...font.upper];
+  const lChars = [...font.lower];
+  const dChars = [...font.digits];
+  for (let i = 0; i < 26; i++) {
+    if (uChars[i] && uChars[i] !== PLAIN_UPPER[i]) REVERSE_MAP.set(uChars[i], PLAIN_UPPER[i]);
+    if (lChars[i] && lChars[i] !== PLAIN_LOWER[i]) REVERSE_MAP.set(lChars[i], PLAIN_LOWER[i]);
+  }
+  for (let i = 0; i < 10; i++) {
+    if (dChars[i] && dChars[i] !== PLAIN_DIGITS[i]) REVERSE_MAP.set(dChars[i], PLAIN_DIGITS[i]);
+  }
+}
+
+function toPlain(text) {
+  // Strip combining marks (strikethrough U+0336, underline U+0332)
+  const stripped = text.replace(/[\u0336\u0332]/g, '');
+  return [...stripped].map(c => REVERSE_MAP.get(c) || c).join('');
+}
+
 function convertFont(text, fontName) {
+  // First convert back to plain ASCII so re-styling works
+  const plain = toPlain(text);
+
   if (fontName === 'strikethrough') {
-    return [...text].map(c => c + '\u0336').join('');
+    return [...plain].map(c => c + '\u0336').join('');
   }
   if (fontName === 'underline') {
-    return [...text].map(c => c + '\u0332').join('');
+    return [...plain].map(c => c + '\u0332').join('');
   }
 
   const font = FONTS[fontName];
-  if (!font) return text;
+  if (!font) return plain;
 
   const upperChars = [...font.upper];
   const lowerChars = [...font.lower];
   const digitChars = [...font.digits];
 
-  return [...text].map(char => {
+  return [...plain].map(char => {
     const code = char.charCodeAt(0);
     if (code >= 65 && code <= 90) return upperChars[code - 65] || char;
     if (code >= 97 && code <= 122) return lowerChars[code - 97] || char;
