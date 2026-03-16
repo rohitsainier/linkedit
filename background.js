@@ -2,6 +2,20 @@
 // Routes requests through the service worker to bypass CORS/port restrictions
 
 chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+  // ─── High-Reach Badge Notifications ───
+  if (msg.action === 'notifyHighReachGrab') {
+    chrome.action.setBadgeText({ text: '!' });
+    chrome.action.setBadgeBackgroundColor({ color: '#057642' });
+    sendResponse({ ok: true });
+    return;
+  }
+
+  if (msg.action === 'clearBadge') {
+    chrome.action.setBadgeText({ text: '' });
+    sendResponse({ ok: true });
+    return;
+  }
+
   if (msg.action === 'ollamaFetch') {
     fetch(msg.url, {
       method: msg.method || 'GET',

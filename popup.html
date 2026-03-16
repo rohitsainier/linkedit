@@ -16,32 +16,25 @@
     --t3: #00000099;
     --green: #057642;
     --red: #cc1016;
-    --orange: #b24020;
-    --sh: 0 0 0 1px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.05);
     --r: 8px;
     --f: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   body {
-    width: 400px;
-    max-height: 580px;
+    width: 360px;
     font-family: var(--f);
     background: var(--bg);
     color: var(--t1);
-    overflow-y: auto;
     -webkit-font-smoothing: antialiased;
   }
 
   /* ─── Header ─── */
   .header {
     background: linear-gradient(135deg, #0a66c2 0%, #004182 100%);
-    padding: 10px 16px;
+    padding: 12px 16px;
     display: flex;
     align-items: center;
     gap: 10px;
-    position: sticky;
-    top: 0;
-    z-index: 10;
   }
   .logo {
     width: 28px; height: 28px;
@@ -52,322 +45,14 @@
     letter-spacing: -0.5px;
   }
   .header h1 { font-size: 14px; font-weight: 700; color: #fff; }
-  .header-right { margin-left: auto; display: flex; gap: 4px; }
-  .hdr-btn {
-    width: 28px; height: 28px;
-    border: none;
-    background: rgba(255,255,255,0.15);
-    border-radius: 6px;
-    color: rgba(255,255,255,0.85);
-    cursor: pointer;
-    display: flex; align-items: center; justify-content: center;
-    transition: background 0.15s;
-  }
-  .hdr-btn:hover { background: rgba(255,255,255,0.3); color: #fff; }
+  .header-sub { font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 500; }
 
-  /* ─── Sections ─── */
+  /* ─── Section ─── */
   .section {
     background: var(--sf);
-    padding: 12px 14px;
+    padding: 14px 16px;
     border-bottom: 1px solid var(--bd);
   }
-  .section-label {
-    font-size: 11px;
-    font-weight: 700;
-    color: var(--t2);
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
-    margin-bottom: 8px;
-  }
-
-  /* ─── Post Capture ─── */
-  .grab-row {
-    display: flex;
-    gap: 6px;
-    margin-bottom: 8px;
-  }
-  .grab-btn {
-    flex: 1;
-    padding: 8px 12px;
-    background: var(--blue);
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: var(--f);
-    cursor: pointer;
-    transition: background 0.15s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-  }
-  .grab-btn:hover { background: var(--blue-h); }
-  .grab-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-  .grab-btn svg { flex-shrink: 0; }
-
-  .paste-toggle {
-    padding: 8px 12px;
-    background: var(--bg);
-    color: var(--t2);
-    border: none;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: var(--f);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .paste-toggle:hover { background: #e5e4e0; }
-
-  .post-preview {
-    background: var(--bg);
-    border-radius: var(--r);
-    padding: 10px 12px;
-    font-size: 12px;
-    line-height: 1.5;
-    color: var(--t1);
-    max-height: 150px;
-    overflow-y: auto;
-    display: none;
-    border-left: 3px solid var(--blue);
-  }
-  .post-preview.visible { display: block; }
-  .post-preview .post-author {
-    font-weight: 700;
-    font-size: 11px;
-    color: var(--t2);
-    margin-bottom: 4px;
-  }
-
-  .paste-area {
-    display: none;
-    width: 100%;
-    min-height: 60px;
-    padding: 8px 10px;
-    border: 1px solid var(--bd);
-    border-radius: var(--r);
-    font-family: var(--f);
-    font-size: 12px;
-    color: var(--t1);
-    resize: vertical;
-    outline: none;
-  }
-  .paste-area:focus { border-color: var(--blue); }
-  .paste-area.visible { display: block; }
-
-  /* ─── Style Pills ─── */
-  .style-row {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 10px;
-  }
-  .style-btn {
-    padding: 6px 14px;
-    border: 1px solid var(--bd);
-    border-radius: 16px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--t2);
-    background: var(--sf);
-    cursor: pointer;
-    font-family: var(--f);
-    transition: all 0.15s;
-  }
-  .style-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
-  .style-btn:hover:not(.active) { border-color: var(--blue); color: var(--blue); }
-
-  /* ─── Angle input ─── */
-  .angle-input {
-    width: 100%;
-    padding: 8px 10px;
-    border: 1px solid var(--bd);
-    border-radius: 6px;
-    font-size: 12px;
-    font-family: var(--f);
-    color: var(--t1);
-    outline: none;
-    margin-bottom: 10px;
-  }
-  .angle-input:focus { border-color: var(--blue); }
-  .angle-input::placeholder { color: var(--t3); }
-
-  /* ─── Generate button ─── */
-  .gen-btn {
-    width: 100%;
-    padding: 10px;
-    background: var(--blue);
-    color: #fff;
-    border: none;
-    border-radius: 8px;
-    font-size: 13px;
-    font-weight: 700;
-    font-family: var(--f);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .gen-btn:hover { background: var(--blue-h); }
-  .gen-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-
-  /* ─── Output ─── */
-  .output-wrap {
-    margin-top: 10px;
-    display: none;
-    animation: fadeUp 0.2s ease;
-  }
-  .output-wrap.visible { display: block; }
-
-  .comment-preview {
-    background: var(--sf);
-    border-radius: var(--r);
-    padding: 12px 14px;
-    box-shadow: var(--sh);
-    margin-bottom: 8px;
-  }
-  .comment-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-  }
-  .comment-avatar {
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, #0a66c2, #004182);
-    display: flex; align-items: center; justify-content: center;
-    color: #fff;
-    font-weight: 700;
-    font-size: 13px;
-    flex-shrink: 0;
-  }
-  .comment-meta {
-    font-size: 11px;
-    color: var(--t2);
-    line-height: 1.3;
-  }
-  .comment-meta .name {
-    font-weight: 700;
-    font-size: 12px;
-    color: var(--t1);
-  }
-  .comment-text {
-    font-size: 13px;
-    line-height: 1.55;
-    color: var(--t1);
-    word-break: break-word;
-  }
-  .comment-text p {
-    margin: 0 0 6px 0;
-  }
-  .comment-text p:last-child { margin-bottom: 0; }
-
-  .output-actions {
-    display: flex;
-    gap: 6px;
-  }
-  .output-actions button {
-    flex: 1;
-    padding: 8px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-    font-family: var(--f);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .btn-copy {
-    background: var(--blue);
-    color: #fff;
-    border: none;
-  }
-  .btn-copy:hover { background: var(--blue-h); }
-  .btn-insert {
-    background: var(--green);
-    color: #fff;
-    border: none;
-  }
-  .btn-insert:hover { background: #045e34; }
-  .btn-regen {
-    background: var(--sf);
-    color: var(--blue);
-    border: 1px solid var(--blue);
-    max-width: 90px;
-  }
-  .btn-regen:hover { background: var(--blue-l); }
-  .btn-success { background: var(--green) !important; }
-
-  /* ─── Loading & Error ─── */
-  .loading {
-    display: none;
-    align-items: center;
-    gap: 8px;
-    padding: 14px 0;
-    color: var(--t2);
-    font-size: 12px;
-    font-weight: 500;
-  }
-  .loading.visible { display: flex; }
-  .spinner {
-    width: 16px; height: 16px;
-    border: 2px solid var(--bd);
-    border-top-color: var(--blue);
-    border-radius: 50%;
-    animation: spin 0.6s linear infinite;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(3px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .error {
-    display: none;
-    background: #fef2f2;
-    color: var(--red);
-    border: 1px solid #fecaca;
-    border-radius: var(--r);
-    padding: 8px 10px;
-    font-size: 11px;
-    font-weight: 500;
-    margin-top: 8px;
-    line-height: 1.4;
-  }
-  .error.visible { display: block; }
-
-  /* ─── Settings Overlay ─── */
-  .settings-overlay {
-    position: fixed;
-    top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(0,0,0,0.4);
-    z-index: 50;
-    display: flex; align-items: center; justify-content: center;
-    animation: fadeIn 0.15s ease;
-  }
-  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-  .settings-panel {
-    background: var(--sf);
-    border-radius: 12px;
-    width: 340px;
-    box-shadow: 0 12px 48px rgba(0,0,0,0.2);
-    overflow: hidden;
-  }
-  .settings-header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 12px 16px;
-    border-bottom: 1px solid var(--bd);
-  }
-  .settings-header h2 { font-size: 14px; font-weight: 700; }
-  .settings-close {
-    width: 24px; height: 24px;
-    border: none; background: none;
-    color: var(--t2); cursor: pointer;
-    border-radius: 4px;
-    display: flex; align-items: center; justify-content: center;
-  }
-  .settings-close:hover { background: var(--bg); }
-  .settings-body { padding: 14px 16px; }
   .s-label {
     font-size: 11px; font-weight: 700; color: var(--t2);
     text-transform: uppercase; letter-spacing: 0.4px;
@@ -412,10 +97,25 @@
     outline: none; cursor: pointer;
   }
   .s-select:disabled { background: var(--bg); color: var(--t3); cursor: not-allowed; }
+
+  /* Toggle switch */
+  .toggle-wrap { position: relative; display: inline-block; width: 36px; height: 20px; }
+  .toggle-wrap input { opacity: 0; width: 0; height: 0; }
+  .toggle-slider {
+    position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+    background: #ccc; border-radius: 20px; transition: 0.2s;
+  }
+  .toggle-slider::before {
+    content: ''; position: absolute; height: 16px; width: 16px;
+    left: 2px; bottom: 2px; background: white; border-radius: 50%; transition: 0.2s;
+  }
+  .toggle-wrap input:checked + .toggle-slider { background: #057642; }
+  .toggle-wrap input:checked + .toggle-slider::before { transform: translateX(16px); }
+
   .s-save {
     width: 100%;
-    margin-top: 12px;
-    padding: 9px;
+    margin-top: 14px;
+    padding: 10px;
     background: var(--blue);
     color: #fff;
     border: none;
@@ -427,7 +127,20 @@
   }
   .s-save:hover { background: var(--blue-h); }
 
-  /* ─── Toast ─── */
+  /* Info banner */
+  .info-banner {
+    background: var(--blue-l);
+    border: 1px solid #bbd9f7;
+    border-radius: var(--r);
+    padding: 10px 12px;
+    font-size: 11px;
+    line-height: 1.5;
+    color: var(--blue-h);
+    margin-bottom: 12px;
+  }
+  .info-banner strong { font-weight: 700; }
+
+  /* Toast */
   .toast {
     position: fixed;
     bottom: 12px;
@@ -447,108 +160,65 @@
     font-family: var(--f);
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
-
-  /* ─── Scrollbar ─── */
-  ::-webkit-scrollbar { width: 3px; }
-  ::-webkit-scrollbar-track { background: transparent; }
-  ::-webkit-scrollbar-thumb { background: #c7c5c0; border-radius: 3px; }
 </style>
 </head>
 <body>
 
 <div class="header">
   <div class="logo">Lc</div>
-  <h1>LinkedComment</h1>
-  <div class="header-right">
-    <button class="hdr-btn" id="settingsGear" title="Ollama Settings">
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-    </button>
+  <div>
+    <h1>LinkedComment</h1>
+    <div class="header-sub">Settings</div>
   </div>
 </div>
 
-<!-- POST CAPTURE -->
+<!-- OLLAMA SETTINGS -->
 <div class="section">
-  <div class="section-label">LinkedIn Post</div>
-  <div class="grab-row">
-    <button class="grab-btn" id="grabBtn">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
-      Grab Post from LinkedIn
-    </button>
-    <button class="paste-toggle" id="pasteToggle">Paste</button>
+  <div class="info-banner">
+    <strong>How it works:</strong> Scroll your LinkedIn feed. Trending posts get a green badge. Click it to generate AI comments inline — no need to open this popup!
   </div>
-  <div class="post-preview" id="postPreview">
-    <div class="post-author" id="postAuthor"></div>
-    <div id="postText"></div>
+
+  <label class="s-label">Ollama Server URL</label>
+  <div class="s-url-row">
+    <input type="text" id="ollamaUrl" class="s-input" value="http://localhost:11434" placeholder="http://localhost:11434">
+    <button class="s-fetch-btn" id="fetchModelsBtn">Fetch Models</button>
   </div>
-  <textarea class="paste-area" id="pasteArea" placeholder="Paste LinkedIn post text here..." rows="3"></textarea>
+  <div class="settings-status" id="ollamaStatus"></div>
+
+  <label class="s-label">Model</label>
+  <select id="ollamaModel" class="s-select" disabled>
+    <option value="">Fetch models first...</option>
+  </select>
 </div>
 
-<!-- COMMENT STYLE & GENERATION -->
+<!-- HIGH-REACH DETECTOR -->
 <div class="section">
-  <div class="section-label">Comment Style</div>
-  <div class="style-row">
-    <button class="style-btn active" data-style="insightful">Insightful</button>
-    <button class="style-btn" data-style="supportive">Supportive</button>
-    <button class="style-btn" data-style="curious">Curious</button>
-    <button class="style-btn" data-style="contrarian">Contrarian</button>
-    <button class="style-btn" data-style="criticize">Criticize</button>
+  <label class="s-label">Trending Post Detector</label>
+  <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+    <span style="font-size: 12px; color: var(--t1);">Detect high-reach posts</span>
+    <label class="toggle-wrap">
+      <input type="checkbox" id="highReachToggle" checked>
+      <span class="toggle-slider"></span>
+    </label>
   </div>
 
-  <input type="text" class="angle-input" id="angleInput" placeholder="Your angle (optional) — e.g. &quot;from a startup founder perspective&quot;">
-
-  <button class="gen-btn" id="generateBtn">Generate Comment</button>
-
-  <div class="loading" id="loading">
-    <div class="spinner"></div>
-    <span>Crafting your comment...</span>
-  </div>
-
-  <div class="error" id="error"></div>
-
-  <div class="output-wrap" id="outputWrap">
-    <div class="comment-preview">
-      <div class="comment-header">
-        <div class="comment-avatar" id="commentAvatar">Y</div>
-        <div class="comment-meta">
-          <div class="name">You</div>
-          <div>Just now</div>
-        </div>
-      </div>
-      <div class="comment-text" id="commentText"></div>
+  <label class="s-label">Thresholds (highlight if exceeds any)</label>
+  <div style="display: flex; gap: 6px; margin-bottom: 4px;">
+    <div style="flex: 1;">
+      <div style="font-size: 10px; color: var(--t2); margin-bottom: 3px;">Reactions</div>
+      <input type="number" id="threshReactions" class="s-input" value="100" min="0" style="width: 100%; text-align: center;">
     </div>
-    <div class="output-actions">
-      <button class="btn-copy" id="copyBtn">Copy</button>
-      <button class="btn-insert" id="insertBtn">Insert into LinkedIn</button>
-      <button class="btn-regen" id="regenBtn">Redo</button>
+    <div style="flex: 1;">
+      <div style="font-size: 10px; color: var(--t2); margin-bottom: 3px;">Comments</div>
+      <input type="number" id="threshComments" class="s-input" value="20" min="0" style="width: 100%; text-align: center;">
+    </div>
+    <div style="flex: 1;">
+      <div style="font-size: 10px; color: var(--t2); margin-bottom: 3px;">Reposts</div>
+      <input type="number" id="threshReposts" class="s-input" value="10" min="0" style="width: 100%; text-align: center;">
     </div>
   </div>
-</div>
 
-<!-- SETTINGS OVERLAY -->
-<div class="settings-overlay" id="settingsOverlay" style="display:none">
-  <div class="settings-panel">
-    <div class="settings-header">
-      <h2>Ollama Settings</h2>
-      <button class="settings-close" id="settingsClose">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-    <div class="settings-body">
-      <label class="s-label">Ollama Server URL</label>
-      <div class="s-url-row">
-        <input type="text" id="ollamaUrl" class="s-input" value="http://localhost:11434" placeholder="http://localhost:11434">
-        <button class="s-fetch-btn" id="fetchModelsBtn">Fetch Models</button>
-      </div>
-      <div class="settings-status" id="ollamaStatus"></div>
-
-      <label class="s-label">Model</label>
-      <select id="ollamaModel" class="s-select" disabled>
-        <option value="">Fetch models first...</option>
-      </select>
-
-      <button class="s-save" id="saveSettingsBtn">Save Settings</button>
-    </div>
-  </div>
+  <button class="s-save" id="saveSettingsBtn">Save Settings</button>
 </div>
 
 <div class="toast" id="toast"></div>
