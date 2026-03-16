@@ -202,7 +202,7 @@
     </label>
   </div>
 
-  <label class="s-label">Thresholds (highlight if exceeds any)</label>
+  <label class="s-label">Thresholds (badge if any exceeded)</label>
   <div style="display: flex; gap: 6px; margin-bottom: 4px;">
     <div style="flex: 1;">
       <div style="font-size: 10px; color: var(--t2); margin-bottom: 3px;">Reactions</div>
@@ -216,6 +216,11 @@
       <div style="font-size: 10px; color: var(--t2); margin-bottom: 3px;">Reposts</div>
       <input type="number" id="threshReposts" class="s-input" value="10" min="0" style="width: 100%; text-align: center;">
     </div>
+  </div>
+  <div style="font-size: 10px; color: var(--t2); margin-top: 6px; line-height: 1.4;">
+    🟢 <strong>Trending</strong> &nbsp;|&nbsp;
+    🟠 <strong>Hot</strong> (score 1K+) &nbsp;|&nbsp;
+    🔴 <strong>Viral</strong> (score 5K+)
   </div>
 
   <button class="s-save" id="saveSettingsBtn">Save Settings</button>

@@ -261,7 +261,7 @@
     thresholds: { reactions: 100, comments: 20, reposts: 10 },
     processedPosts: new WeakSet(),
     badgeCount: 0,
-    maxBadges: 5,
+    maxBadges: 1000,
     observer: null,
     feedObserver: null
   };
@@ -269,7 +269,10 @@
   function parseEngagementCount(text) {
     if (!text) return 0;
     const cleaned = text.replace(/,/g, '').trim().toLowerCase();
-    const match = cleaned.match(/([\d.]+)\s*(k|m)?/);
+    // Match number with optional K/M suffix directly attached (e.g. "1.2k", "3m")
+    // The suffix must be immediately after the number — no spaces — to avoid
+    // misreading "298 reactions. More..." as "298M"
+    const match = cleaned.match(/([\d.]+)(k|m)?\b/);
     if (!match) return 0;
     let num = parseFloat(match[1]);
     if (match[2] === 'k') num *= 1000;
@@ -277,58 +280,98 @@
     return Math.round(num);
   }
 
+  // ─── Extract engagement (reactions, comments, reposts) ───
+  // Strategy: find the feed item's OWN social bar by locating the main action bar
+  // (Like/Comment/Repost/Send) and then finding the social-counts container
+  // that is its closest preceding sibling. This avoids reading nested/embedded
+  // post stats because embedded posts have their own separate action bar higher up.
   function extractEngagement(postEl) {
     const engagement = { reactions: 0, comments: 0, reposts: 0 };
     if (!postEl) return engagement;
 
-    // Reactions — look for the reactions count element
+    // Step 1: Find ALL action bars (containers with Like/Comment/Repost buttons)
+    // The feed item's own action bar is the LAST one in DOM order.
+    const actionBars = postEl.querySelectorAll('.social-actions-button, .feed-shared-social-actions, .social-actions');
+    let feedActionBar = null;
+    for (const bar of actionBars) {
+      feedActionBar = bar; // keep overwriting — last one is the outermost
+    }
+
+    // Step 2: From the action bar, walk UP to find the nearest social-counts container
+    let scopeEl = null;
+    if (feedActionBar) {
+      // Walk up from action bar and look for sibling/nearby social counts
+      let walker = feedActionBar.previousElementSibling;
+      while (walker) {
+        if (walker.querySelector('.social-details-social-counts') || walker.classList?.contains('social-details-social-counts')) {
+          scopeEl = walker.querySelector('.social-details-social-counts') || walker;
+          break;
+        }
+        // Also check if this element itself contains social count text
+        if (walker.textContent && (walker.textContent.includes('comment') || walker.textContent.includes('reaction'))) {
+          const bar = walker.querySelector('.social-details-social-counts');
+          if (bar) { scopeEl = bar; break; }
+        }
+        walker = walker.previousElementSibling;
+      }
+      // Also try parent's context
+      if (!scopeEl && feedActionBar.parentElement) {
+        const parent = feedActionBar.parentElement;
+        scopeEl = parent.querySelector('.social-details-social-counts');
+      }
+    }
+
+    // Step 3: Fallback — use the LAST social-counts bar in the post (most likely outermost)
+    if (!scopeEl) {
+      const allBars = postEl.querySelectorAll('.social-details-social-counts');
+      if (allBars.length > 0) {
+        scopeEl = allBars[allBars.length - 1];
+      }
+    }
+
+    // Final fallback — scan entire post
+    if (!scopeEl) scopeEl = postEl;
+
+    // ─── Read reactions ───
     const reactionSelectors = [
       '.social-details-social-counts__reactions-count',
-      'button[aria-label*="reaction"] span',
-      'button[aria-label*="like"] span',
-      '.reactions-count',
       'span.social-details-social-counts__reactions-count'
     ];
     for (const sel of reactionSelectors) {
-      const el = postEl.querySelector(sel);
+      const el = scopeEl.querySelector(sel);
       if (el && el.textContent.trim()) {
         engagement.reactions = parseEngagementCount(el.textContent);
         if (engagement.reactions > 0) break;
       }
     }
-
-    // Also try aria-label on the reactions button (e.g. "1,234 reactions")
+    // Try aria-label fallback for reactions
     if (engagement.reactions === 0) {
-      const reactBtn = postEl.querySelector('button[aria-label*="reaction"], button[aria-label*="like"]');
+      const reactBtn = scopeEl.querySelector('button[aria-label*="reaction"], button[aria-label*="like"]');
       if (reactBtn) {
-        const label = reactBtn.getAttribute('aria-label') || '';
-        engagement.reactions = parseEngagementCount(label);
+        engagement.reactions = parseEngagementCount(reactBtn.getAttribute('aria-label') || '');
       }
     }
 
-    // Comments & Reposts — from social counts buttons
-    const socialBtns = postEl.querySelectorAll('button[aria-label]');
-    for (const btn of socialBtns) {
-      const label = (btn.getAttribute('aria-label') || '').toLowerCase();
-      if (label.includes('comment') && !label.includes('add')) {
+    // ─── Read comments & reposts from text content ───
+    const countItems = scopeEl.querySelectorAll(
+      '.social-details-social-counts__item, .social-details-social-counts__comments, button[aria-label]'
+    );
+    for (const item of countItems) {
+      // Try text content first
+      const text = item.textContent.trim().toLowerCase();
+      if (text.includes('comment') && engagement.comments === 0) {
+        engagement.comments = parseEngagementCount(text);
+      }
+      if (text.includes('repost') && engagement.reposts === 0) {
+        engagement.reposts = parseEngagementCount(text);
+      }
+      // Also try aria-label
+      const label = (item.getAttribute?.('aria-label') || '').toLowerCase();
+      if (label.includes('comment') && !label.includes('add') && engagement.comments === 0) {
         engagement.comments = parseEngagementCount(label);
       }
-      if (label.includes('repost')) {
+      if (label.includes('repost') && engagement.reposts === 0) {
         engagement.reposts = parseEngagementCount(label);
-      }
-    }
-
-    // Fallback: try text content of social counts items
-    if (engagement.comments === 0 || engagement.reposts === 0) {
-      const countItems = postEl.querySelectorAll('.social-details-social-counts__item, .social-details-social-counts__comments');
-      for (const item of countItems) {
-        const text = item.textContent.trim().toLowerCase();
-        if (text.includes('comment') && engagement.comments === 0) {
-          engagement.comments = parseEngagementCount(text);
-        }
-        if (text.includes('repost') && engagement.reposts === 0) {
-          engagement.reposts = parseEngagementCount(text);
-        }
       }
     }
 
@@ -377,8 +420,19 @@ Rules:
     }
   }
 
+  function isExtensionValid() {
+    try {
+      return !!chrome.runtime?.id;
+    } catch { return false; }
+  }
+
   function createWidget(postEl) {
     closeActiveWidget();
+
+    if (!isExtensionValid()) {
+      showToast('Extension reloaded — please refresh this page.');
+      return;
+    }
 
     // Read Ollama settings
     chrome.storage.local.get(['ollamaUrl', 'ollamaModel'], (settings) => {
@@ -599,8 +653,15 @@ Rules:
   }
 
   function injectBadge(postEl, engagement) {
-    // Don't duplicate
+    // Don't duplicate — check self, children, AND ancestors
     if (postEl.querySelector('.linkedcomment-reach-badge')) return;
+    if (postEl.closest?.('.linkedcomment-reach-badge')) return;
+    // Check if any ancestor post already has a badge
+    let ancestor = postEl.parentElement;
+    while (ancestor) {
+      if (ancestor.querySelector?.(':scope > .linkedcomment-reach-badge')) return;
+      ancestor = ancestor.parentElement;
+    }
     if (highReach.badgeCount >= highReach.maxBadges) return;
 
     // Ensure post is positioned for absolute badge placement
@@ -612,16 +673,28 @@ Rules:
     const badge = document.createElement('div');
     badge.className = 'linkedcomment-reach-badge';
 
-    // Build stats string
+    // Determine tier based on weighted engagement score
+    const totalScore = engagement.reactions + (engagement.comments * 5) + (engagement.reposts * 3);
+    let tier = 'warm';        // green
+    let tierLabel = 'Trending';
+    if (totalScore >= 5000) {
+      tier = 'viral';         // red
+      tierLabel = '🔥 Viral';
+    } else if (totalScore >= 1000) {
+      tier = 'hot';           // orange
+      tierLabel = '⚡ Hot';
+    }
+    badge.setAttribute('data-tier', tier);
+
+    // Build stats string — show all non-zero metrics
     const parts = [];
     if (engagement.reactions > 0) parts.push(formatCount(engagement.reactions) + ' reactions');
     if (engagement.comments > 0) parts.push(formatCount(engagement.comments) + ' comments');
+    if (engagement.reposts > 0) parts.push(formatCount(engagement.reposts) + ' reposts');
 
     badge.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
-      </svg>
-      <span>Trending</span>
+      ${tier === 'warm' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' : ''}
+      <span>${tierLabel}</span>
       ${parts.length ? `<span class="linkedcomment-badge-stats">${parts.join(' · ')}</span>` : ''}
     `;
 
@@ -648,13 +721,17 @@ Rules:
     if (highReach.processedPosts.has(postEl)) return;
     highReach.processedPosts.add(postEl);
 
+    // Skip if this element is INSIDE another post element (nested/embedded post)
+    const parentPost = postEl.parentElement?.closest('.feed-shared-update-v2, .occludable-update, [data-urn*="activity"]');
+    if (parentPost) return; // this is a nested post — only process the outermost one
+
     // Skip promoted posts
     if (isPromotedPost(postEl)) return;
 
     const engagement = extractEngagement(postEl);
     const t = highReach.thresholds;
 
-    // Check if any metric exceeds threshold
+    // Check if any metric exceeds its threshold
     if (engagement.reactions >= t.reactions || engagement.comments >= t.comments || engagement.reposts >= t.reposts) {
       injectBadge(postEl, engagement);
     }
@@ -717,6 +794,7 @@ Rules:
   }
 
   // Initialize detector from stored settings
+  if (!isExtensionValid()) return;
   chrome.storage.local.get(['highReachEnabled', 'highReachThresholds'], (data) => {
     if (data.highReachEnabled === false) {
       highReach.enabled = false;

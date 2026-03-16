@@ -23,9 +23,9 @@ function loadSettings() {
 
       if (data.highReachThresholds) {
         const t = data.highReachThresholds;
-        if (document.getElementById('threshReactions')) document.getElementById('threshReactions').value = t.reactions || 100;
-        if (document.getElementById('threshComments')) document.getElementById('threshComments').value = t.comments || 20;
-        if (document.getElementById('threshReposts')) document.getElementById('threshReposts').value = t.reposts || 10;
+        if (document.getElementById('threshReactions')) document.getElementById('threshReactions').value = t.reactions ?? 100;
+        if (document.getElementById('threshComments')) document.getElementById('threshComments').value = t.comments ?? 20;
+        if (document.getElementById('threshReposts')) document.getElementById('threshReposts').value = t.reposts ?? 10;
       }
 
       resolve();
@@ -42,9 +42,9 @@ function saveSettings() {
   // High-reach settings
   const highReachEnabled = document.getElementById('highReachToggle')?.checked ?? true;
   const highReachThresholds = {
-    reactions: parseInt(document.getElementById('threshReactions')?.value) || 100,
-    comments: parseInt(document.getElementById('threshComments')?.value) || 20,
-    reposts: parseInt(document.getElementById('threshReposts')?.value) || 10
+    reactions: parseInt(document.getElementById('threshReactions')?.value ?? 100),
+    comments: parseInt(document.getElementById('threshComments')?.value ?? 20),
+    reposts: parseInt(document.getElementById('threshReposts')?.value ?? 10)
   };
 
   chrome.storage.local.set({
