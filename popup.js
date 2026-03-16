@@ -9,6 +9,19 @@ function showToast(msg) {
   setTimeout(() => toastEl.classList.remove('show'), 1600);
 }
 
+// ─── Dark Mode for Popup UI ───
+function applyPopupDarkMode(mode) {
+  if (mode === 'dark') {
+    document.body.classList.add('dark');
+  } else if (mode === 'auto') {
+    // Use system preference for popup
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    document.body.classList.toggle('dark', prefersDark);
+  } else {
+    document.body.classList.remove('dark');
+  }
+}
+
 // ─── Settings ───
 function loadSettings() {
   return new Promise(resolve => {
@@ -17,9 +30,11 @@ function loadSettings() {
       if (data.ollamaModel) ollamaSettings.model = data.ollamaModel;
       document.getElementById('ollamaUrl').value = ollamaSettings.url;
 
-      // Dark mode setting
+      // Dark mode setting — apply to popup UI immediately
       const darkModeSelect = document.getElementById('darkModeSelect');
-      if (darkModeSelect) darkModeSelect.value = data.darkMode || 'auto';
+      const savedDarkMode = data.darkMode || 'auto';
+      if (darkModeSelect) darkModeSelect.value = savedDarkMode;
+      applyPopupDarkMode(savedDarkMode);
 
       // High-reach detector settings
       const toggle = document.getElementById('highReachToggle');
@@ -139,6 +154,11 @@ async function fetchModels(url) {
 // ─── Event Listeners ───
 document.getElementById('fetchModelsBtn').addEventListener('click', () => fetchModels());
 document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+
+// Live-preview dark mode when dropdown changes (before save)
+document.getElementById('darkModeSelect').addEventListener('change', (e) => {
+  applyPopupDarkMode(e.target.value);
+});
 
 // ─── Init ───
 loadSettings().then(() => fetchModels(ollamaSettings.url));

@@ -160,6 +160,66 @@
     font-family: var(--f);
   }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+  /* ─── Dark Mode ─── */
+  body.dark {
+    --bg: #1d2226;
+    --sf: #1d2226;
+    --bd: #38434f;
+    --t1: #e8e8e8;
+    --t2: #8e9caa;
+    --t3: #8e9caacc;
+    --blue-l: #1b3a5c;
+    --green: #4ade80;
+    --red: #f87171;
+  }
+  body.dark .header {
+    background: linear-gradient(135deg, #1b3a5c 0%, #0d2137 100%);
+  }
+  body.dark .s-input,
+  body.dark .s-select {
+    background: #38434f;
+    color: #e8e8e8;
+    border-color: #525f6c;
+  }
+  body.dark .s-input:focus,
+  body.dark .s-select:focus {
+    border-color: #70b5f9;
+  }
+  body.dark .s-select:disabled {
+    background: #2c353d;
+    color: #8e9caa;
+  }
+  body.dark .s-fetch-btn {
+    background: #38434f;
+    color: #70b5f9;
+    border-color: #70b5f9;
+  }
+  body.dark .s-fetch-btn:hover {
+    background: #445360;
+  }
+  body.dark .s-save {
+    background: #70b5f9;
+    color: #1d2226;
+  }
+  body.dark .s-save:hover {
+    background: #93c5fd;
+  }
+  body.dark .info-banner {
+    background: #1b3a5c;
+    border-color: #2d6db5;
+    color: #93c5fd;
+  }
+  body.dark .toggle-slider {
+    background: #525f6c;
+  }
+  body.dark .toggle-wrap input:checked + .toggle-slider {
+    background: #4ade80;
+  }
+  body.dark .toast {
+    background: #e8e8e8;
+    color: #1d2226;
+  }
 </style>
 </head>
 <body>
@@ -175,7 +235,7 @@
 <!-- OLLAMA SETTINGS -->
 <div class="section">
   <div class="info-banner">
-    <strong>How it works:</strong> Scroll your LinkedIn feed. Trending posts get a green badge. Click it to generate AI comments inline — no need to open this popup!
+    <strong>How it works:</strong> Scroll your LinkedIn feed. Trending posts get a badge. Click <strong>Reply</strong> to generate AI comments inline — no need to open this popup!
   </div>
 
   <label class="s-label">Ollama Server URL</label>
