@@ -48,6 +48,48 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   transform: translateY(-1px);
 }
+/* Divider dot */
+.linkedcomment-reach-badge .linkedcomment-badge-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.3;
+  flex-shrink: 0;
+}
+/* Always-visible "Reply" CTA pill */
+.linkedcomment-reach-badge .linkedcomment-badge-cta {
+  font-size: 10px;
+  font-weight: 700;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 2px 8px;
+  border-radius: 10px;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: background 0.15s;
+}
+.linkedcomment-reach-badge .linkedcomment-badge-cta svg {
+  width: 11px !important;
+  height: 11px !important;
+}
+.linkedcomment-reach-badge:hover .linkedcomment-badge-cta {
+  background: rgba(0, 0, 0, 0.16);
+}
+/* Tier CTA colors */
+.linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-badge-cta {
+  background: rgba(194, 65, 12, 0.1);
+}
+.linkedcomment-reach-badge[data-tier="hot"]:hover .linkedcomment-badge-cta {
+  background: rgba(194, 65, 12, 0.2);
+}
+.linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-cta {
+  background: rgba(185, 28, 28, 0.1);
+}
+.linkedcomment-reach-badge[data-tier="viral"]:hover .linkedcomment-badge-cta {
+  background: rgba(185, 28, 28, 0.2);
+}
 
 /* Tier: Hot (orange) */
 .linkedcomment-reach-badge[data-tier="hot"] {
