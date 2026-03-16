@@ -712,11 +712,11 @@ Rules:
     }
     badge.setAttribute('data-tier', tier);
 
-    // Build stats string — show all non-zero metrics
+    // Build inline stats with bold numbers
     const parts = [];
-    if (engagement.reactions > 0) parts.push(formatCount(engagement.reactions) + ' reactions');
-    if (engagement.comments > 0) parts.push(formatCount(engagement.comments) + ' comments');
-    if (engagement.reposts > 0) parts.push(formatCount(engagement.reposts) + ' reposts');
+    if (engagement.reactions > 0) parts.push(`<span class="linkedcomment-stat-num">${formatCount(engagement.reactions)}</span> reactions`);
+    if (engagement.comments > 0) parts.push(`<span class="linkedcomment-stat-num">${formatCount(engagement.comments)}</span> comments`);
+    if (engagement.reposts > 0) parts.push(`<span class="linkedcomment-stat-num">${formatCount(engagement.reposts)}</span> reposts`);
 
     badge.innerHTML = `
       ${tier === 'warm' ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>' : ''}
