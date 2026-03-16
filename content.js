@@ -14,6 +14,56 @@
     setTimeout(() => toastEl.classList.remove('show'), 2000);
   }
 
+  // ─── Dark Mode Detection ───
+  let darkModeSetting = 'auto'; // 'auto', 'light', 'dark'
+
+  function isLinkedInDark() {
+    // LinkedIn uses .theme--dark on <body> or data attributes for dark mode
+    return document.body.classList.contains('theme--dark') ||
+           document.documentElement.classList.contains('theme--dark') ||
+           document.documentElement.getAttribute('data-theme') === 'dark' ||
+           document.body.getAttribute('data-theme') === 'dark';
+  }
+
+  let _applyingDark = false; // guard against infinite MutationObserver loop
+  function applyDarkMode() {
+    if (_applyingDark) return;
+    _applyingDark = true;
+
+    let shouldBeDark = false;
+    if (darkModeSetting === 'dark') {
+      shouldBeDark = true;
+    } else if (darkModeSetting === 'auto') {
+      shouldBeDark = isLinkedInDark();
+    }
+    // else 'light' → shouldBeDark stays false
+
+    if (shouldBeDark) {
+      document.documentElement.classList.add('linkedcomment-dark');
+    } else {
+      document.documentElement.classList.remove('linkedcomment-dark');
+    }
+
+    _applyingDark = false;
+  }
+
+  // Watch for LinkedIn theme changes (auto mode)
+  // Only observe <body> — not <html> — because we modify <html> class ourselves
+  const themeObserver = new MutationObserver(() => {
+    if (darkModeSetting === 'auto') applyDarkMode();
+  });
+  if (document.body) {
+    themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+  } else {
+    // Fallback: wait for body to be ready
+    const bodyWait = setInterval(() => {
+      if (document.body) {
+        clearInterval(bodyWait);
+        themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-theme'] });
+      }
+    }, 200);
+  }
+
   // ─── Find the most visible LinkedIn post ───
   function findBestPost() {
     // LinkedIn feed post selectors (multiple patterns for different layouts)
@@ -651,13 +701,13 @@ Rules:
 
     // Determine tier based on weighted engagement score
     const totalScore = engagement.reactions + (engagement.comments * 5) + (engagement.reposts * 3);
-    let tier = 'warm';        // green
+    let tier = 'warm';        // light blue
     let tierLabel = 'Trending';
     if (totalScore >= 5000) {
-      tier = 'viral';         // red
+      tier = 'viral';         // bold navy/white
       tierLabel = '🔥 Viral';
     } else if (totalScore >= 1000) {
-      tier = 'hot';           // orange
+      tier = 'hot';           // deeper blue
       tierLabel = '⚡ Hot';
     }
     badge.setAttribute('data-tier', tier);
@@ -774,9 +824,14 @@ Rules:
     highReach.badgeCount = 0;
   }
 
-  // Initialize detector from stored settings
+  // Initialize detector and dark mode from stored settings
   if (!isExtensionValid()) return;
-  chrome.storage.local.get(['highReachEnabled', 'highReachThresholds'], (data) => {
+  chrome.storage.local.get(['highReachEnabled', 'highReachThresholds', 'darkMode'], (data) => {
+    // Dark mode
+    if (data.darkMode) darkModeSetting = data.darkMode;
+    applyDarkMode();
+
+    // High-reach detector
     if (data.highReachEnabled === false) {
       highReach.enabled = false;
     } else {
@@ -793,6 +848,10 @@ Rules:
 
   // React to settings changes in real time
   chrome.storage.onChanged.addListener((changes) => {
+    if (changes.darkMode) {
+      darkModeSetting = changes.darkMode.newValue || 'auto';
+      applyDarkMode();
+    }
     if (changes.highReachEnabled) {
       highReach.enabled = changes.highReachEnabled.newValue !== false;
       if (highReach.enabled) {
@@ -818,6 +877,13 @@ Rules:
       highReach.enabled = msg.enabled;
       if (msg.enabled) startDetector();
       else stopDetector();
+      sendResponse({ ok: true });
+      return;
+    }
+
+    if (msg.action === 'updateDarkMode') {
+      darkModeSetting = msg.darkMode || 'auto';
+      applyDarkMode();
       sendResponse({ ok: true });
       return;
     }

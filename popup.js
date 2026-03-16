@@ -12,10 +12,14 @@ function showToast(msg) {
 // ─── Settings ───
 function loadSettings() {
   return new Promise(resolve => {
-    chrome.storage.local.get(['ollamaUrl', 'ollamaModel', 'highReachEnabled', 'highReachThresholds'], (data) => {
+    chrome.storage.local.get(['ollamaUrl', 'ollamaModel', 'highReachEnabled', 'highReachThresholds', 'darkMode'], (data) => {
       if (data.ollamaUrl) ollamaSettings.url = data.ollamaUrl;
       if (data.ollamaModel) ollamaSettings.model = data.ollamaModel;
       document.getElementById('ollamaUrl').value = ollamaSettings.url;
+
+      // Dark mode setting
+      const darkModeSelect = document.getElementById('darkModeSelect');
+      if (darkModeSelect) darkModeSelect.value = data.darkMode || 'auto';
 
       // High-reach detector settings
       const toggle = document.getElementById('highReachToggle');
@@ -39,6 +43,9 @@ function saveSettings() {
   ollamaSettings.url = url;
   ollamaSettings.model = model;
 
+  // Dark mode setting
+  const darkMode = document.getElementById('darkModeSelect')?.value || 'auto';
+
   // High-reach settings
   const highReachEnabled = document.getElementById('highReachToggle')?.checked ?? true;
   const highReachThresholds = {
@@ -50,15 +57,17 @@ function saveSettings() {
   chrome.storage.local.set({
     ollamaUrl: url,
     ollamaModel: model,
+    darkMode,
     highReachEnabled,
     highReachThresholds
   });
 
-  // Notify content script about high-reach changes
+  // Notify content script about changes
   chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
     if (tab && tab.url && tab.url.includes('linkedin.com')) {
       chrome.tabs.sendMessage(tab.id, { action: 'toggleHighReach', enabled: highReachEnabled });
       chrome.tabs.sendMessage(tab.id, { action: 'updateThresholds', thresholds: highReachThresholds });
+      chrome.tabs.sendMessage(tab.id, { action: 'updateDarkMode', darkMode });
     }
   });
 
