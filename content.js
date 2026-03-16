@@ -250,16 +250,15 @@
   }
 
   // ─── High-Reach Post Detector ───
-  const postSelectors = [
-    '.feed-shared-update-v2',
-    '.occludable-update',
-    '[data-urn*="activity"]'
-  ];
+  // Use ONLY .occludable-update — these are LinkedIn's top-level feed items
+  // in the virtual scroll. Each feed item (original post, repost, "commented on")
+  // is wrapped in exactly one .occludable-update. This avoids matching nested
+  // elements that cause duplicate badges and wrong engagement data.
+  const POST_SELECTOR = '.occludable-update';
 
   const highReach = {
     enabled: true,
     thresholds: { reactions: 100, comments: 20, reposts: 10 },
-    processedPosts: new WeakSet(),
     badgeCount: 0,
     maxBadges: 1000,
     observer: null,
@@ -281,70 +280,49 @@
   }
 
   // ─── Extract engagement (reactions, comments, reposts) ───
-  // Strategy: find the feed item's OWN social bar by locating the main action bar
-  // (Like/Comment/Repost/Send) and then finding the social-counts container
-  // that is its closest preceding sibling. This avoids reading nested/embedded
-  // post stats because embedded posts have their own separate action bar higher up.
+  // Since we now only process .occludable-update elements (top-level feed items),
+  // we need to find the social counts bar that belongs to THIS feed item — not
+  // an embedded/shared post inside it.
+  //
+  // LinkedIn DOM structure for a top-level post:
+  //   .occludable-update
+  //     .feed-shared-update-v2  (may contain a nested .feed-shared-update-v2 for reshares)
+  //       .social-details-social-counts  ← EMBEDDED post's stats (if reshare)
+  //       .social-details-social-counts  ← FEED ITEM's own stats
+  //       .feed-shared-social-actions    ← Like/Comment/Repost/Send buttons
+  //
+  // Strategy: find the feed item's MAIN social action bar (the one with
+  // Like/Comment/Repost/Send), then get the social-counts bar closest to it.
+  // The main action bar is always the LAST .feed-shared-social-actions in DOM order.
+
   function extractEngagement(postEl) {
     const engagement = { reactions: 0, comments: 0, reposts: 0 };
     if (!postEl) return engagement;
 
-    // Step 1: Find ALL action bars (containers with Like/Comment/Repost buttons)
-    // The feed item's own action bar is the LAST one in DOM order.
-    const actionBars = postEl.querySelectorAll('.social-actions-button, .feed-shared-social-actions, .social-actions');
-    let feedActionBar = null;
-    for (const bar of actionBars) {
-      feedActionBar = bar; // keep overwriting — last one is the outermost
-    }
+    // Find the LAST social-details-social-activity container
+    // In LinkedIn's DOM, the feed item's own social details always come last
+    const allSocialDetails = postEl.querySelectorAll('.social-details-social-activity');
+    let scopeEl = allSocialDetails.length > 0
+      ? allSocialDetails[allSocialDetails.length - 1]
+      : null;
 
-    // Step 2: From the action bar, walk UP to find the nearest social-counts container
-    let scopeEl = null;
-    if (feedActionBar) {
-      // Walk up from action bar and look for sibling/nearby social counts
-      let walker = feedActionBar.previousElementSibling;
-      while (walker) {
-        if (walker.querySelector('.social-details-social-counts') || walker.classList?.contains('social-details-social-counts')) {
-          scopeEl = walker.querySelector('.social-details-social-counts') || walker;
-          break;
-        }
-        // Also check if this element itself contains social count text
-        if (walker.textContent && (walker.textContent.includes('comment') || walker.textContent.includes('reaction'))) {
-          const bar = walker.querySelector('.social-details-social-counts');
-          if (bar) { scopeEl = bar; break; }
-        }
-        walker = walker.previousElementSibling;
-      }
-      // Also try parent's context
-      if (!scopeEl && feedActionBar.parentElement) {
-        const parent = feedActionBar.parentElement;
-        scopeEl = parent.querySelector('.social-details-social-counts');
-      }
-    }
-
-    // Step 3: Fallback — use the LAST social-counts bar in the post (most likely outermost)
+    // If no .social-details-social-activity, try .social-details-social-counts directly
     if (!scopeEl) {
-      const allBars = postEl.querySelectorAll('.social-details-social-counts');
-      if (allBars.length > 0) {
-        scopeEl = allBars[allBars.length - 1];
+      const allCounts = postEl.querySelectorAll('.social-details-social-counts');
+      if (allCounts.length > 0) {
+        scopeEl = allCounts[allCounts.length - 1];
       }
     }
 
-    // Final fallback — scan entire post
+    // Final fallback
     if (!scopeEl) scopeEl = postEl;
 
     // ─── Read reactions ───
-    const reactionSelectors = [
-      '.social-details-social-counts__reactions-count',
-      'span.social-details-social-counts__reactions-count'
-    ];
-    for (const sel of reactionSelectors) {
-      const el = scopeEl.querySelector(sel);
-      if (el && el.textContent.trim()) {
-        engagement.reactions = parseEngagementCount(el.textContent);
-        if (engagement.reactions > 0) break;
-      }
+    const reactEl = scopeEl.querySelector('.social-details-social-counts__reactions-count');
+    if (reactEl && reactEl.textContent.trim()) {
+      engagement.reactions = parseEngagementCount(reactEl.textContent);
     }
-    // Try aria-label fallback for reactions
+    // Aria-label fallback
     if (engagement.reactions === 0) {
       const reactBtn = scopeEl.querySelector('button[aria-label*="reaction"], button[aria-label*="like"]');
       if (reactBtn) {
@@ -352,26 +330,31 @@
       }
     }
 
-    // ─── Read comments & reposts from text content ───
-    const countItems = scopeEl.querySelectorAll(
-      '.social-details-social-counts__item, .social-details-social-counts__comments, button[aria-label]'
+    // ─── Read comments & reposts ───
+    const countEls = scopeEl.querySelectorAll(
+      '.social-details-social-counts__item, .social-details-social-counts__comments'
     );
-    for (const item of countItems) {
-      // Try text content first
-      const text = item.textContent.trim().toLowerCase();
+    for (const el of countEls) {
+      const text = el.textContent.trim().toLowerCase();
       if (text.includes('comment') && engagement.comments === 0) {
         engagement.comments = parseEngagementCount(text);
       }
       if (text.includes('repost') && engagement.reposts === 0) {
         engagement.reposts = parseEngagementCount(text);
       }
-      // Also try aria-label
-      const label = (item.getAttribute?.('aria-label') || '').toLowerCase();
-      if (label.includes('comment') && !label.includes('add') && engagement.comments === 0) {
-        engagement.comments = parseEngagementCount(label);
-      }
-      if (label.includes('repost') && engagement.reposts === 0) {
-        engagement.reposts = parseEngagementCount(label);
+    }
+
+    // Aria-label fallback for comments/reposts
+    if (engagement.comments === 0 || engagement.reposts === 0) {
+      const btns = scopeEl.querySelectorAll('button[aria-label]');
+      for (const btn of btns) {
+        const label = (btn.getAttribute('aria-label') || '').toLowerCase();
+        if (label.includes('comment') && !label.includes('add') && engagement.comments === 0) {
+          engagement.comments = parseEngagementCount(label);
+        }
+        if (label.includes('repost') && engagement.reposts === 0) {
+          engagement.reposts = parseEngagementCount(label);
+        }
       }
     }
 
@@ -653,15 +636,8 @@ Rules:
   }
 
   function injectBadge(postEl, engagement) {
-    // Don't duplicate — check self, children, AND ancestors
-    if (postEl.querySelector('.linkedcomment-reach-badge')) return;
-    if (postEl.closest?.('.linkedcomment-reach-badge')) return;
-    // Check if any ancestor post already has a badge
-    let ancestor = postEl.parentElement;
-    while (ancestor) {
-      if (ancestor.querySelector?.(':scope > .linkedcomment-reach-badge')) return;
-      ancestor = ancestor.parentElement;
-    }
+    // Safety: don't duplicate badge
+    if (postEl.querySelector(':scope > .linkedcomment-reach-badge')) return;
     if (highReach.badgeCount >= highReach.maxBadges) return;
 
     // Ensure post is positioned for absolute badge placement
@@ -717,13 +693,17 @@ Rules:
     highReach.badgeCount++;
   }
 
-  function processPost(postEl) {
-    if (highReach.processedPosts.has(postEl)) return;
-    highReach.processedPosts.add(postEl);
+  function processPost(scrollEl) {
+    // scrollEl is .occludable-update (the scroll wrapper).
+    // The ACTUAL post is the first .feed-shared-update-v2 inside it.
+    // Multiple .occludable-update wrappers can share the same inner post,
+    // so we dedup on the inner post element, not the wrapper.
+    const postEl = scrollEl.querySelector('.feed-shared-update-v2');
+    if (!postEl) return;
 
-    // Skip if this element is INSIDE another post element (nested/embedded post)
-    const parentPost = postEl.parentElement?.closest('.feed-shared-update-v2, .occludable-update, [data-urn*="activity"]');
-    if (parentPost) return; // this is a nested post — only process the outermost one
+    // Already processed — this is the key dedup
+    if (postEl.hasAttribute('data-linkedcomment-processed')) return;
+    postEl.setAttribute('data-linkedcomment-processed', 'true');
 
     // Skip promoted posts
     if (isPromotedPost(postEl)) return;
@@ -743,34 +723,33 @@ Rules:
     // IntersectionObserver — process posts as they enter viewport
     highReach.observer = new IntersectionObserver((entries) => {
       for (const entry of entries) {
-        if (entry.isIntersecting) {
+        if (entry.isIntersecting && isTopLevelPost(entry.target)) {
           processPost(entry.target);
         }
       }
     }, { threshold: 0.3 });
 
-    // Observe all existing posts
-    for (const sel of postSelectors) {
-      document.querySelectorAll(sel).forEach(post => {
-        highReach.observer.observe(post);
-      });
+    // Only observe TOP-LEVEL .occludable-update — skip any nested inside another
+    function isTopLevelPost(el) {
+      return !el.parentElement?.closest(POST_SELECTOR);
     }
+
+    // Observe all existing top-level posts
+    document.querySelectorAll(POST_SELECTOR).forEach(post => {
+      if (isTopLevelPost(post)) highReach.observer.observe(post);
+    });
 
     // MutationObserver — watch for new posts added to the feed
     highReach.feedObserver = new MutationObserver((mutations) => {
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
           if (node.nodeType !== 1) continue;
-          for (const sel of postSelectors) {
-            // Check if the added node itself is a post
-            if (node.matches?.(sel)) {
-              highReach.observer.observe(node);
-            }
-            // Check children
-            node.querySelectorAll?.(sel)?.forEach(post => {
-              highReach.observer.observe(post);
-            });
+          if (node.matches?.(POST_SELECTOR) && isTopLevelPost(node)) {
+            highReach.observer.observe(node);
           }
+          node.querySelectorAll?.(POST_SELECTOR)?.forEach(post => {
+            if (isTopLevelPost(post)) highReach.observer.observe(post);
+          });
         }
       }
     });
@@ -787,10 +766,10 @@ Rules:
       highReach.feedObserver.disconnect();
       highReach.feedObserver = null;
     }
-    // Remove all badges
+    // Remove all badges and processed markers
     document.querySelectorAll('.linkedcomment-reach-badge').forEach(b => b.remove());
+    document.querySelectorAll('[data-linkedcomment-processed]').forEach(el => el.removeAttribute('data-linkedcomment-processed'));
     highReach.badgeCount = 0;
-    highReach.processedPosts = new WeakSet();
   }
 
   // Initialize detector from stored settings
