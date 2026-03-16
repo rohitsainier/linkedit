@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "LinkeEdit — LinkedIn Post Formatter & Toolkit",
-  "version": "1.0.0",
-  "description": "Bold, italic, special fonts, emojis, post templates, hooks, and formatting tools that LinkedIn doesn't give you. Write posts that stand out.",
-  "permissions": ["activeTab", "clipboardWrite", "clipboardRead", "storage"],
+  "name": "LinkedComment — AI Comment Generator for LinkedIn",
+  "version": "2.0.0",
+  "description": "Generate thoughtful, engaging LinkedIn comments using your local AI. Grab any post, pick a style, get a perfect comment in seconds.",
+  "permissions": ["activeTab", "clipboardWrite", "clipboardRead", "storage", "declarativeNetRequest"],
+  "host_permissions": ["http://localhost:11434/*", "http://127.0.0.1:11434/*", "http://localhost/*", "http://127.0.0.1/*"],
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
@@ -25,6 +26,15 @@
       "run_at": "document_idle"
     }
   ],
+  "declarative_net_request": {
+    "rule_resources": [
+      {
+        "id": "ollama_cors",
+        "enabled": true,
+        "path": "rules.json"
+      }
+    ]
+  },
   "background": {
     "service_worker": "background.js"
   }

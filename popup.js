@@ -1,140 +1,9 @@
-// ─── Unicode Font Maps ───
-const FONTS = {
-  bold: {
-    upper: '𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭',
-    lower: '𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇',
-    digits: '𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵'
-  },
-  italic: {
-    upper: '𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡',
-    lower: '𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻',
-    digits: '0123456789'
-  },
-  boldItalic: {
-    upper: '𝘼𝘽𝘾𝘿𝙀𝙁𝙂𝙃𝙄𝙅𝙆𝙇𝙈𝙉𝙊𝙋𝙌𝙍𝙎𝙏𝙐𝙑𝙒𝙓𝙔𝙕',
-    lower: '𝙖𝙗𝙘𝙙𝙚𝙛𝙜𝙝𝙞𝙟𝙠𝙡𝙢𝙣𝙤𝙥𝙦𝙧𝙨𝙩𝙪𝙫𝙬𝙭𝙮𝙯',
-    digits: '𝟬𝟭𝟮𝟯𝟰𝟱𝟲𝟳𝟴𝟵'
-  },
-  monospace: {
-    upper: '𝙰𝙱𝙲𝙳𝙴𝙵𝙶𝙷𝙸𝙹𝙺𝙻𝙼𝙽𝙾𝙿𝚀𝚁𝚂𝚃𝚄𝚅𝚆𝚇𝚈𝚉',
-    lower: '𝚊𝚋𝚌𝚍𝚎𝚏𝚐𝚑𝚒𝚓𝚔𝚕𝚖𝚗𝚘𝚙𝚚𝚛𝚜𝚝𝚞𝚟𝚠𝚡𝚢𝚣',
-    digits: '𝟶𝟷𝟸𝟹𝟺𝟻𝟼𝟽𝟾𝟿'
-  },
-  script: {
-    upper: '𝒜𝒝𝒞𝒟𝒠𝒡𝒢𝒣𝒤𝒥𝒦𝒧𝒨𝒩𝒪𝒫𝒬𝒭𝒮𝒯𝒰𝒱𝒲𝒳𝒴𝒵',
-    lower: '𝒶𝒷𝒸𝒹𝑒𝒻𝑔𝒽𝒾𝒿𝓀𝓁𝓂𝓃𝑜𝓅𝓆𝓇𝓈𝓉𝓊𝓋𝓌𝓍𝓎𝓏',
-    digits: '0123456789'
-  },
-  fraktur: {
-    upper: '𝔄𝔅ℭ𝔇𝔈𝔉𝔊ℌℑ𝔍𝔎𝔏𝔐𝔑𝔒𝔓𝔔ℜ𝔖𝔗𝔘𝔙𝔚𝔛𝔜ℨ',
-    lower: '𝔞𝔟𝔠𝔡𝔢𝔣𝔤𝔥𝔦𝔧𝔨𝔩𝔪𝔫𝔬𝔭𝔮𝔯𝔰𝔱𝔲𝔳𝔴𝔵𝔶𝔷',
-    digits: '0123456789'
-  },
-  doubleStruck: {
-    upper: '𝔸𝔹ℂ𝔻𝔼𝔽𝔾ℍ𝕀𝕁𝕂𝕃𝕄ℕ𝕆ℙℚℝ𝕊𝕋𝕌𝕍𝕎𝕏𝕐ℤ',
-    lower: '𝕒𝕓𝕔𝕕𝕖𝕗𝕘𝕙𝕚𝕛𝕜𝕝𝕞𝕟𝕠𝕡𝕢𝕣𝕤𝕥𝕦𝕧𝕨𝕩𝕪𝕫',
-    digits: '𝟘𝟙𝟚𝟛𝟜𝟝𝟞𝟟𝟠𝟡'
-  },
-  circled: {
-    upper: 'ⒶⒷⒸⒹⒺⒻⒼⒽⒾⒿⓀⓁⓂⓃⓄⓅⓆⓇⓈⓉⓊⓋⓌⓍⓎⓏ',
-    lower: 'ⓐⓑⓒⓓⓔⓕⓖⓗⓘⓙⓚⓛⓜⓝⓞⓟⓠⓡⓢⓣⓤⓥⓦⓧⓨⓩ',
-    digits: '⓪①②③④⑤⑥⑦⑧⑨'
-  },
-  squared: {
-    upper: '🄰🄱🄲🄳🄴🄵🄶🄷🄸🄹🄺🄻🄼🄽🄾🄿🅀🅁🅂🅃🅄🅅🅆🅇🅈🅉',
-    lower: '🄰🄱🄲🄳🄴🄵🄶🄷🄸🄹🄺🄻🄼🄽🄾🄿🅀🅁🅂🅃🅄🅅🅆🅇🅈🅉',
-    digits: '0123456789'
-  },
-  smallCaps: {
-    upper: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ',
-    lower: 'ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘǫʀꜱᴛᴜᴠᴡxʏᴢ',
-    digits: '0123456789'
-  }
-};
+// ─── State ───
+let ollamaSettings = { url: 'http://localhost:11434', model: '' };
+let commentStyle = 'insightful';
+let capturedPost = '';
+let lastRawComment = '';
 
-// ─── Build reverse lookup: styled char → plain ASCII ───
-const REVERSE_MAP = new Map();
-const PLAIN_UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const PLAIN_LOWER = 'abcdefghijklmnopqrstuvwxyz';
-const PLAIN_DIGITS = '0123456789';
-
-for (const fontName of Object.keys(FONTS)) {
-  const font = FONTS[fontName];
-  const uChars = [...font.upper];
-  const lChars = [...font.lower];
-  const dChars = [...font.digits];
-  for (let i = 0; i < 26; i++) {
-    if (uChars[i] && uChars[i] !== PLAIN_UPPER[i]) REVERSE_MAP.set(uChars[i], PLAIN_UPPER[i]);
-    if (lChars[i] && lChars[i] !== PLAIN_LOWER[i]) REVERSE_MAP.set(lChars[i], PLAIN_LOWER[i]);
-  }
-  for (let i = 0; i < 10; i++) {
-    if (dChars[i] && dChars[i] !== PLAIN_DIGITS[i]) REVERSE_MAP.set(dChars[i], PLAIN_DIGITS[i]);
-  }
-}
-
-function toPlain(text) {
-  // Strip combining marks (strikethrough U+0336, underline U+0332)
-  const stripped = text.replace(/[\u0336\u0332]/g, '');
-  return [...stripped].map(c => REVERSE_MAP.get(c) || c).join('');
-}
-
-function convertFont(text, fontName) {
-  // First convert back to plain ASCII so re-styling works
-  const plain = toPlain(text);
-
-  if (fontName === 'strikethrough') {
-    return [...plain].map(c => c + '\u0336').join('');
-  }
-  if (fontName === 'underline') {
-    return [...plain].map(c => c + '\u0332').join('');
-  }
-
-  const font = FONTS[fontName];
-  if (!font) return plain;
-
-  const upperChars = [...font.upper];
-  const lowerChars = [...font.lower];
-  const digitChars = [...font.digits];
-
-  return [...plain].map(char => {
-    const code = char.charCodeAt(0);
-    if (code >= 65 && code <= 90) return upperChars[code - 65] || char;
-    if (code >= 97 && code <= 122) return lowerChars[code - 97] || char;
-    if (code >= 48 && code <= 57) return digitChars[code - 48] || char;
-    return char;
-  }).join('');
-}
-
-// ─── Emoji Data ───
-const EMOJIS = {
-  'Popular': ['🔥','💡','🚀','✅','❌','👉','👇','💪','🎯','⚡','💰','🏆','📌','🔑','💎','⭐','🙌','👏','🎉','❤️','🧠','📈','📊','🛠️','💬','📢','🤝','🌟','✨','🎁'],
-  'Business': ['📊','📈','📉','💹','💼','🏢','🏦','💳','🧾','📋','📑','📝','✍️','🖊️','📧','📬','🤵','👔','🎓','🏅','📱','💻','⌨️','🖥️','🔒','🔓','⚙️','🔧','📡','🌐'],
-  'People': ['👋','🤔','😊','😎','🤩','💭','🗣️','👥','🫂','🙏','💯','🎯','🧑‍💻','👨‍💼','👩‍💼','🧑‍🏫','🧑‍🎓','🦾','🧑‍🤝‍🧑','🤷','🙋','✋','👆','☝️','🫡','🤓','😤','🔥','💪','🏃'],
-  'Arrows': ['→','←','↑','↓','↗','↘','↙','↖','⟶','⟵','⇒','⇐','⇧','⇩','⟹','⟸','➡️','⬅️','⬆️','⬇️','↩️','↪️','🔄','🔃','▶️','◀️','🔽','🔼','➤','➜'],
-  'Symbols': ['•','◆','◇','▪','▫','★','☆','○','●','□','■','△','▲','▽','▼','♦','♠','♣','♥','✦','✧','⟡','⊕','⊗','✓','✗','⟐','⌁','꘎','║']
-};
-
-// ─── Templates ───
-const HOOKS = [
-  { title: 'Hot Take', tag: 'hook', text: 'Unpopular opinion:\n\n[Your controversial take]\n\nHere\'s why 👇' },
-  { title: 'Story Hook', tag: 'hook', text: 'I was [situation] when [unexpected thing happened].\n\nIt changed everything I knew about [topic].\n\nHere\'s the story:' },
-  { title: 'Number Hook', tag: 'hook', text: 'I spent [X hours/days/years] doing [activity].\n\nHere are [N] things I wish I knew from day one:\n\n↓' },
-  { title: 'Myth Buster', tag: 'hook', text: '"[Common belief]"\n\nThis is the biggest lie in [industry].\n\nThe truth? ↓' },
-  { title: 'Before/After', tag: 'hook', text: '6 months ago: [bad situation]\nToday: [great result]\n\nHere\'s the exact playbook:' },
-  { title: 'Controversial Q', tag: 'hook', text: 'Why does nobody talk about [topic]?\n\nI\'ve been thinking about this for weeks.\n\nHere\'s what I\'ve realized:' },
-];
-
-const FRAMEWORKS = [
-  { title: 'Listicle', tag: 'list', text: '[Hook — 1 sentence]\n\n1. [Point 1]\n2. [Point 2]\n3. [Point 3]\n4. [Point 4]\n5. [Point 5]\n\n─────────\n\nTL;DR: [Key takeaway]\n\n♻️ Repost if this was helpful\n👉 Follow [Name] for more' },
-  { title: 'Story + Lesson', tag: 'story', text: '[Hook — what happened]\n\nSome context:\n[2-3 sentences of background]\n\nHere\'s what I did:\n→ [Step 1]\n→ [Step 2]\n→ [Step 3]\n\nThe result?\n[Outcome]\n\nThe lesson:\n[1-2 sentences]\n\n─────────\n\nAgree? Let me know 👇' },
-  { title: 'Do This Not That', tag: 'list', text: 'Stop doing [bad thing].\nStart doing [good thing].\n\n❌ [Bad approach 1]\n✅ [Better approach 1]\n\n❌ [Bad approach 2]\n✅ [Better approach 2]\n\n❌ [Bad approach 3]\n✅ [Better approach 3]\n\nThe difference?\n[Explanation]\n\n─────────\n\nWhich one resonated most? 👇' },
-  { title: 'CTA Post', tag: 'cta', text: '[Bold claim or announcement]\n\nI\'m looking for [N] [type of people] who want to:\n\n✦ [Benefit 1]\n✦ [Benefit 2]\n✦ [Benefit 3]\n\nHere\'s the deal:\n[What you\'re offering]\n\n→ Comment "[word]" and I\'ll DM you the details.\n\n(Serious inquiries only)' },
-];
-
-// ─── Init ───
-const editor = document.getElementById('mainEditor');
-const charCount = document.getElementById('charCount');
-const lineCount = document.getElementById('lineCount');
 const toastEl = document.getElementById('toast');
 
 function showToast(msg) {
@@ -143,206 +12,338 @@ function showToast(msg) {
   setTimeout(() => toastEl.classList.remove('show'), 1600);
 }
 
-function updateCounts() {
-  const len = editor.value.length;
-  const lines = editor.value.split('\n').length;
-  charCount.textContent = `${len.toLocaleString()} / 3,000`;
-  charCount.className = 'char-count' + (len > 2800 ? ' warn' : '') + (len > 3000 ? ' over' : '');
-  lineCount.textContent = `${lines} line${lines !== 1 ? 's' : ''}`;
+// ─── Post Capture ───
+document.getElementById('grabBtn').addEventListener('click', async () => {
+  const btn = document.getElementById('grabBtn');
+  btn.disabled = true;
+  btn.textContent = 'Grabbing...';
 
-  // Update preview
-  document.getElementById('previewBox').textContent = editor.value || 'Start typing in the Format tab...';
-  document.getElementById('previewCharCount').textContent = `${len.toLocaleString()} / 3,000`;
-}
-
-editor.addEventListener('input', updateCounts);
-
-// ─── Tabs ───
-document.querySelectorAll('.tab').forEach(tab => {
-  tab.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-    document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-    tab.classList.add('active');
-    document.getElementById('tab-' + tab.dataset.tab).classList.add('active');
-  });
-});
-
-// ─── Font buttons ───
-document.getElementById('fontToolbar').addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-font]');
-  if (!btn) return;
-  const fontName = btn.dataset.font;
-  const start = editor.selectionStart;
-  const end = editor.selectionEnd;
-
-  if (start === end) {
-    // No selection — convert entire text
-    editor.value = convertFont(editor.value, fontName);
-  } else {
-    // Convert selection only
-    const selected = editor.value.substring(start, end);
-    const converted = convertFont(selected, fontName);
-    editor.value = editor.value.substring(0, start) + converted + editor.value.substring(end);
-    editor.setSelectionRange(start, start + converted.length);
-  }
-  editor.focus();
-  updateCounts();
-});
-
-// ─── Separator buttons ───
-document.getElementById('sepGrid').addEventListener('click', (e) => {
-  const btn = e.target.closest('[data-sep]');
-  if (!btn) return;
-  const sep = btn.dataset.sep;
-  const pos = editor.selectionStart;
-  editor.value = editor.value.substring(0, pos) + sep + editor.value.substring(pos);
-  editor.selectionStart = editor.selectionEnd = pos + sep.length;
-  editor.focus();
-  updateCounts();
-});
-
-// ─── Hashtags ───
-document.getElementById('hashtagRow').addEventListener('click', (e) => {
-  const btn = e.target.closest('.hashtag');
-  if (!btn) return;
-  const tag = btn.textContent;
-  const val = editor.value;
-  if (val && !val.endsWith('\n') && !val.endsWith(' ')) {
-    editor.value += ' ';
-  }
-  editor.value += tag + ' ';
-  editor.focus();
-  updateCounts();
-});
-
-// ─── Emojis ───
-const emojiCatsEl = document.getElementById('emojiCats');
-const emojiGridEl = document.getElementById('emojiGrid');
-let activeEmojiCat = 'Popular';
-
-function renderEmojiCats() {
-  emojiCatsEl.innerHTML = '';
-  for (const cat of Object.keys(EMOJIS)) {
-    const btn = document.createElement('button');
-    btn.className = 'emoji-cat' + (cat === activeEmojiCat ? ' active' : '');
-    btn.textContent = EMOJIS[cat][0] + ' ' + cat;
-    btn.style.fontSize = '12px';
-    btn.addEventListener('click', () => {
-      activeEmojiCat = cat;
-      renderEmojiCats();
-      renderEmojiGrid();
-    });
-    emojiCatsEl.appendChild(btn);
-  }
-}
-
-function renderEmojiGrid() {
-  emojiGridEl.innerHTML = '';
-  for (const emoji of EMOJIS[activeEmojiCat]) {
-    const btn = document.createElement('button');
-    btn.className = 'emoji-btn';
-    btn.textContent = emoji;
-    btn.addEventListener('click', () => {
-      const pos = editor.selectionStart;
-      editor.value = editor.value.substring(0, pos) + emoji + editor.value.substring(pos);
-      editor.selectionStart = editor.selectionEnd = pos + emoji.length;
-      updateCounts();
-      showToast(`${emoji} inserted`);
-    });
-    emojiGridEl.appendChild(btn);
-  }
-}
-
-renderEmojiCats();
-renderEmojiGrid();
-
-// ─── Templates ───
-function renderTemplates() {
-  const hookContainer = document.getElementById('hookTemplates');
-  const fwContainer = document.getElementById('frameworkTemplates');
-
-  HOOKS.forEach(t => {
-    const card = document.createElement('div');
-    card.className = 'template-card';
-    card.innerHTML = `<h3><span class="template-tag ${t.tag}">${t.tag}</span> ${t.title}</h3><p>${t.text.substring(0, 80)}...</p>`;
-    card.addEventListener('click', () => {
-      editor.value = t.text;
-      updateCounts();
-      // Switch to format tab
-      document.querySelectorAll('.tab').forEach(tb => tb.classList.remove('active'));
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      document.querySelector('[data-tab="format"]').classList.add('active');
-      document.getElementById('tab-format').classList.add('active');
-      showToast('Template loaded — customize it!');
-    });
-    hookContainer.appendChild(card);
-  });
-
-  FRAMEWORKS.forEach(t => {
-    const card = document.createElement('div');
-    card.className = 'template-card';
-    card.innerHTML = `<h3><span class="template-tag ${t.tag}">${t.tag}</span> ${t.title}</h3><p>${t.text.substring(0, 90)}...</p>`;
-    card.addEventListener('click', () => {
-      editor.value = t.text;
-      updateCounts();
-      document.querySelectorAll('.tab').forEach(tb => tb.classList.remove('active'));
-      document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-      document.querySelector('[data-tab="format"]').classList.add('active');
-      document.getElementById('tab-format').classList.add('active');
-      showToast('Template loaded — customize it!');
-    });
-    fwContainer.appendChild(card);
-  });
-}
-renderTemplates();
-
-// ─── Copy buttons ───
-async function copyText(text) {
   try {
-    await navigator.clipboard.writeText(text);
-    return true;
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab || !tab.url || !tab.url.includes('linkedin.com')) {
+      showToast('Open LinkedIn first!');
+      return;
+    }
+
+    const response = await chrome.tabs.sendMessage(tab.id, { action: 'grabPost' });
+    if (response && response.text) {
+      capturedPost = response.text;
+      const preview = document.getElementById('postPreview');
+      const postAuthor = document.getElementById('postAuthor');
+      const postText = document.getElementById('postText');
+
+      postAuthor.textContent = response.author ? `${response.author}` : 'LinkedIn Post';
+      postText.textContent = capturedPost;
+      preview.classList.add('visible');
+
+      // Hide paste area if open
+      document.getElementById('pasteArea').classList.remove('visible');
+      showToast('Post captured!');
+    } else {
+      showToast('No post found. Scroll to a post and try again.');
+    }
+  } catch (err) {
+    showToast('Cannot reach LinkedIn tab. Refresh the page.');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg> Grab Post from LinkedIn';
+  }
+});
+
+// Paste toggle
+document.getElementById('pasteToggle').addEventListener('click', () => {
+  const area = document.getElementById('pasteArea');
+  const isVisible = area.classList.contains('visible');
+  area.classList.toggle('visible', !isVisible);
+  if (!isVisible) area.focus();
+});
+
+document.getElementById('pasteArea').addEventListener('input', (e) => {
+  capturedPost = e.target.value.trim();
+  // Hide preview when manually pasting
+  document.getElementById('postPreview').classList.remove('visible');
+});
+
+// ─── Style Selection ───
+document.querySelectorAll('.style-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.style-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    commentStyle = btn.dataset.style;
+  });
+});
+
+// ─── Ollama Settings ───
+function loadSettings() {
+  return new Promise(resolve => {
+    chrome.storage.local.get(['ollamaUrl', 'ollamaModel'], (data) => {
+      if (data.ollamaUrl) ollamaSettings.url = data.ollamaUrl;
+      if (data.ollamaModel) ollamaSettings.model = data.ollamaModel;
+      document.getElementById('ollamaUrl').value = ollamaSettings.url;
+      resolve();
+    });
+  });
+}
+
+function saveSettings() {
+  const url = document.getElementById('ollamaUrl').value.trim().replace(/\/+$/, '');
+  const model = document.getElementById('ollamaModel').value;
+  ollamaSettings.url = url;
+  ollamaSettings.model = model;
+  chrome.storage.local.set({ ollamaUrl: url, ollamaModel: model });
+  showToast('Settings saved');
+  document.getElementById('settingsOverlay').style.display = 'none';
+}
+
+async function fetchModels(url) {
+  const statusEl = document.getElementById('ollamaStatus');
+  const selectEl = document.getElementById('ollamaModel');
+  const fetchBtn = document.getElementById('fetchModelsBtn');
+
+  url = (url || document.getElementById('ollamaUrl').value).trim().replace(/\/+$/, '');
+  statusEl.textContent = 'Connecting...';
+  statusEl.className = 'settings-status';
+  fetchBtn.disabled = true;
+  fetchBtn.textContent = 'Fetching...';
+
+  try {
+    const result = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        { action: 'ollamaFetch', url: `${url}/api/tags`, method: 'GET' },
+        (response) => {
+          if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
+          else if (!response || !response.ok) reject(new Error(response?.error || 'Connection failed'));
+          else resolve(response.data);
+        }
+      );
+    });
+    const data = JSON.parse(result);
+    const models = data.models || [];
+
+    if (models.length === 0) {
+      statusEl.textContent = 'Connected, but no models found. Run: ollama pull llama3.2';
+      statusEl.className = 'settings-status err';
+      selectEl.innerHTML = '<option value="">No models available</option>';
+      selectEl.disabled = true;
+      return;
+    }
+
+    selectEl.innerHTML = '';
+    models.forEach(m => {
+      const opt = document.createElement('option');
+      opt.value = m.name;
+      const gb = m.size / (1024 * 1024 * 1024);
+      const size = gb >= 1 ? `${gb.toFixed(1)}GB` : `${(m.size / (1024 * 1024)).toFixed(0)}MB`;
+      opt.textContent = `${m.name} (${size})`;
+      selectEl.appendChild(opt);
+    });
+    selectEl.disabled = false;
+
+    if (ollamaSettings.model && models.some(m => m.name === ollamaSettings.model)) {
+      selectEl.value = ollamaSettings.model;
+    }
+
+    statusEl.textContent = `Connected — ${models.length} model${models.length !== 1 ? 's' : ''} found`;
+    statusEl.className = 'settings-status ok';
+  } catch (err) {
+    statusEl.textContent = `Cannot connect: ${err.message}. Is Ollama running?`;
+    statusEl.className = 'settings-status err';
+    selectEl.innerHTML = '<option value="">Connection failed</option>';
+    selectEl.disabled = true;
+  } finally {
+    fetchBtn.disabled = false;
+    fetchBtn.textContent = 'Fetch Models';
+  }
+}
+
+document.getElementById('settingsGear').addEventListener('click', () => {
+  document.getElementById('settingsOverlay').style.display = 'flex';
+  loadSettings().then(() => fetchModels(ollamaSettings.url));
+});
+
+document.getElementById('settingsClose').addEventListener('click', () => {
+  document.getElementById('settingsOverlay').style.display = 'none';
+});
+
+document.getElementById('settingsOverlay').addEventListener('click', (e) => {
+  if (e.target === e.currentTarget) document.getElementById('settingsOverlay').style.display = 'none';
+});
+
+document.getElementById('fetchModelsBtn').addEventListener('click', () => fetchModels());
+document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
+
+// ─── Comment Generation ───
+const SYSTEM_PROMPT = `You are a LinkedIn engagement expert. Your job is to write a single comment in response to a LinkedIn post.
+
+Rules:
+- Write ONLY the comment text, nothing else (no "Here's a comment:" preamble)
+- Keep it concise: 1-3 short sentences (under 280 characters ideally)
+- Sound genuine and human, not robotic or generic
+- Add value: share a perspective, ask a smart question, or offer a relevant insight
+- Do NOT use hashtags in comments
+- Do NOT use markdown formatting (no **, ##, etc)
+- Do NOT start with "Great post!" or "Thanks for sharing!" — those are generic and low-value
+- Match the energy of the original post`;
+
+function buildPrompt(postText, style, angle) {
+  const styleMap = {
+    'insightful': 'Add a thoughtful insight, data point, or non-obvious perspective that builds on the post. Show you have domain expertise.',
+    'supportive': 'Agree and amplify — share a brief personal experience or example that validates the post\'s point. Be warm and genuine.',
+    'curious': 'Ask a smart, specific follow-up question that shows you read carefully and want to learn more. Not generic.',
+    'contrarian': 'Respectfully challenge or offer an alternative perspective. Be constructive, not argumentative. Start with acknowledging the point, then pivot.',
+    'criticize': 'Point out flaws, gaps, or weaknesses in the argument. Be direct and specific about what is wrong or misleading. Stay professional but firm — no sugarcoating. Back up the critique with reasoning or evidence.'
+  };
+
+  let prompt = `Write a LinkedIn comment on this post.
+
+Style: ${styleMap[style] || styleMap['insightful']}
+${angle ? `\nPersonal angle: ${angle}` : ''}
+
+Post:
+"""
+${postText.substring(0, 1500)}
+"""
+
+Write the comment now:`;
+
+  return prompt;
+}
+
+function formatCommentAsHTML(rawText) {
+  const escaped = rawText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const paragraphs = escaped.split(/\n{2,}/);
+  let html = '';
+  paragraphs.forEach(para => {
+    const trimmed = para.trim();
+    if (!trimmed) return;
+    // Convert single newlines to <br>
+    html += `<p>${trimmed.replace(/\n/g, '<br>')}</p>`;
+  });
+  return html || `<p>${escaped}</p>`;
+}
+
+async function generateComment() {
+  const outputWrap = document.getElementById('outputWrap');
+  const commentText = document.getElementById('commentText');
+  const loadingEl = document.getElementById('loading');
+  const errorEl = document.getElementById('error');
+  const genBtn = document.getElementById('generateBtn');
+  const angle = document.getElementById('angleInput').value.trim();
+
+  if (!ollamaSettings.model) {
+    errorEl.textContent = 'No model selected. Click the gear icon to configure Ollama.';
+    errorEl.classList.add('visible');
+    return;
+  }
+
+  if (!capturedPost) {
+    showToast('Grab or paste a post first');
+    return;
+  }
+
+  errorEl.classList.remove('visible');
+  outputWrap.classList.remove('visible');
+  loadingEl.classList.add('visible');
+  genBtn.disabled = true;
+  genBtn.textContent = 'Generating...';
+
+  const prompt = buildPrompt(capturedPost, commentStyle, angle);
+
+  try {
+    const result = await new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        {
+          action: 'ollamaStream',
+          url: `${ollamaSettings.url}/api/generate`,
+          body: JSON.stringify({
+            model: ollamaSettings.model,
+            prompt: prompt,
+            system: SYSTEM_PROMPT,
+            stream: true
+          })
+        },
+        (response) => {
+          if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
+          else if (!response || !response.ok) reject(new Error(response?.error || 'Generation failed'));
+          else resolve(response.data);
+        }
+      );
+    });
+
+    loadingEl.classList.remove('visible');
+
+    // Clean up: remove any leading/trailing quotes the LLM might add
+    let cleaned = result.trim().replace(/^["']|["']$/g, '');
+    lastRawComment = cleaned;
+
+    commentText.innerHTML = formatCommentAsHTML(cleaned);
+    outputWrap.classList.add('visible');
+
+    if (!cleaned) {
+      outputWrap.classList.remove('visible');
+      errorEl.textContent = 'Empty response. Try a different prompt or model.';
+      errorEl.classList.add('visible');
+    }
+  } catch (err) {
+    loadingEl.classList.remove('visible');
+    let msg = err.message;
+    if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
+      msg = 'Cannot connect to Ollama. Make sure it is running.';
+    }
+    errorEl.textContent = msg;
+    errorEl.classList.add('visible');
+  } finally {
+    genBtn.disabled = false;
+    genBtn.textContent = 'Generate Comment';
+  }
+}
+
+document.getElementById('generateBtn').addEventListener('click', generateComment);
+document.getElementById('regenBtn').addEventListener('click', generateComment);
+
+// ─── Copy ───
+document.getElementById('copyBtn').addEventListener('click', async () => {
+  if (!lastRawComment) { showToast('Nothing to copy'); return; }
+  try {
+    await navigator.clipboard.writeText(lastRawComment);
   } catch {
     const ta = document.createElement('textarea');
-    ta.value = text;
+    ta.value = lastRawComment;
     ta.style.cssText = 'position:fixed;left:-9999px';
     document.body.appendChild(ta);
     ta.select();
     document.execCommand('copy');
     document.body.removeChild(ta);
-    return true;
   }
-}
-
-document.getElementById('copyBtn').addEventListener('click', async () => {
-  if (!editor.value.trim()) { showToast('Nothing to copy!'); return; }
-  await copyText(editor.value);
   const btn = document.getElementById('copyBtn');
   btn.textContent = 'Copied!';
   btn.classList.add('btn-success');
-  setTimeout(() => { btn.textContent = 'Copy to Clipboard'; btn.classList.remove('btn-success'); }, 1500);
-  showToast('Copied to clipboard — paste in LinkedIn!');
+  setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('btn-success'); }, 1500);
+  showToast('Copied — paste into LinkedIn!');
 });
 
-document.getElementById('previewCopyBtn').addEventListener('click', async () => {
-  if (!editor.value.trim()) { showToast('Nothing to copy!'); return; }
-  await copyText(editor.value);
-  showToast('Copied to clipboard!');
-});
-
-document.getElementById('clearBtn').addEventListener('click', () => {
-  editor.value = '';
-  updateCounts();
-  editor.focus();
-});
-
-// ─── Persist draft ───
-chrome.storage.local.get(['draft'], (data) => {
-  if (data.draft) {
-    editor.value = data.draft;
-    updateCounts();
+// ─── Insert into LinkedIn ───
+document.getElementById('insertBtn').addEventListener('click', async () => {
+  if (!lastRawComment) { showToast('Nothing to insert'); return; }
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab || !tab.url || !tab.url.includes('linkedin.com')) {
+      showToast('Open LinkedIn first!');
+      return;
+    }
+    const response = await chrome.tabs.sendMessage(tab.id, {
+      action: 'insertComment',
+      text: lastRawComment
+    });
+    if (response && response.ok) {
+      showToast('Comment inserted!');
+    } else {
+      showToast(response?.error || 'Could not find comment box. Click "Comment" on the post first.');
+    }
+  } catch {
+    showToast('Cannot reach LinkedIn tab. Refresh the page.');
   }
 });
 
-editor.addEventListener('input', () => {
-  chrome.storage.local.set({ draft: editor.value });
-});
+// ─── Init ───
+loadSettings();

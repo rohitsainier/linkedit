@@ -1,240 +1,341 @@
 (() => {
   'use strict';
-  if (window.__linkedit_loaded) return;
-  window.__linkedit_loaded = true;
+  if (window.__linkedcomment_loaded) return;
+  window.__linkedcomment_loaded = true;
 
-  // ─── Unicode Font Maps (compact) ───
-  const BOLD_UPPER = '𝗔𝗕𝗖𝗗𝗘𝗙𝗚𝗛𝗜𝗝𝗞𝗟𝗠𝗡𝗢𝗣𝗤𝗥𝗦𝗧𝗨𝗩𝗪𝗫𝗬𝗭';
-  const BOLD_LOWER = '𝗮𝗯𝗰𝗱𝗲𝗳𝗴𝗵𝗶𝗷𝗸𝗹𝗺𝗻𝗼𝗽𝗾𝗿𝘀𝘁𝘂𝘃𝘄𝘅𝘆𝘇';
-  const ITALIC_UPPER = '𝘈𝘉𝘊𝘋𝘌𝘍𝘎𝘏𝘐𝘑𝘒𝘓𝘔𝘕𝘖𝘗𝘘𝘙𝘚𝘛𝘜𝘝𝘞𝘟𝘠𝘡';
-  const ITALIC_LOWER = '𝘢𝘣𝘤𝘥𝘦𝘧𝘨𝘩𝘪𝘫𝘬𝘭𝘮𝘯𝘰𝘱𝘲𝘳𝘴𝘵𝘶𝘷𝘸𝘹𝘺𝘻';
-
-  function toBold(text) {
-    const bu = [...BOLD_UPPER], bl = [...BOLD_LOWER];
-    return [...text].map(c => {
-      const code = c.charCodeAt(0);
-      if (code >= 65 && code <= 90) return bu[code - 65];
-      if (code >= 97 && code <= 122) return bl[code - 97];
-      return c;
-    }).join('');
-  }
-
-  function toItalic(text) {
-    const iu = [...ITALIC_UPPER], il = [...ITALIC_LOWER];
-    return [...text].map(c => {
-      const code = c.charCodeAt(0);
-      if (code >= 65 && code <= 90) return iu[code - 65];
-      if (code >= 97 && code <= 122) return il[code - 97];
-      return c;
-    }).join('');
-  }
-
-  // ─── Create UI ───
-  const floatBar = document.createElement('div');
-  floatBar.id = 'linkedit-float-bar';
-  floatBar.classList.add('active');
-
-  const miniToolbar = document.createElement('div');
-  miniToolbar.id = 'linkedit-mini-toolbar';
-
-  const quickTools = [
-    { label: '𝗕 Bold', action: 'bold' },
-    { label: '𝘐 Italic', action: 'italic' },
-    { label: 'S̶t̶r̶i̶k̶e̶', action: 'strike' },
-    { label: '• Bullet', action: 'bullet' },
-    { label: '→ Arrow', action: 'arrow' },
-    { label: '━━━━', action: 'separator' },
-    { label: '✅ ❌', action: 'checklist' },
-    { label: '🔥 Fire', action: 'emoji_fire' },
-    { label: '📌 Pin', action: 'emoji_pin' },
-    { label: '💡 Idea', action: 'emoji_idea' },
-  ];
-
-  quickTools.forEach(tool => {
-    const btn = document.createElement('button');
-    btn.className = 'le-mini-btn';
-    btn.textContent = tool.label;
-    btn.addEventListener('click', (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      applyTool(tool.action);
-    });
-    miniToolbar.appendChild(btn);
-  });
-
-  const fab = document.createElement('button');
-  fab.id = 'linkedit-fab';
-  fab.textContent = 'Le';
-  fab.title = 'LinkeEdit — Format your post';
-
-  let toolbarOpen = false;
-  fab.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    toolbarOpen = !toolbarOpen;
-    miniToolbar.classList.toggle('open', toolbarOpen);
-    fab.style.background = toolbarOpen ? '#1d4ed8' : '#2563eb';
-  });
-
-  floatBar.appendChild(miniToolbar);
-  floatBar.appendChild(fab);
-
+  // ─── Toast UI ───
   const toastEl = document.createElement('div');
-  toastEl.id = 'linkedit-toast';
-
-  document.body.appendChild(floatBar);
+  toastEl.id = 'linkedcomment-toast';
   document.body.appendChild(toastEl);
 
   function showToast(msg) {
     toastEl.textContent = msg;
     toastEl.classList.add('show');
-    setTimeout(() => toastEl.classList.remove('show'), 1600);
+    setTimeout(() => toastEl.classList.remove('show'), 2000);
   }
 
-  // ─── Find LinkedIn's editor ───
-  function findEditor() {
-    // LinkedIn uses contenteditable divs for post creation
-    const editors = document.querySelectorAll(
-      '.ql-editor[contenteditable="true"], ' +
-      '[role="textbox"][contenteditable="true"], ' +
-      '.editor-content [contenteditable="true"], ' +
-      '.msg-form__contenteditable [contenteditable="true"]'
-    );
-    return editors[0] || null;
+  // ─── Find the most visible LinkedIn post ───
+  function findBestPost() {
+    // LinkedIn feed post selectors (multiple patterns for different layouts)
+    const postSelectors = [
+      '.feed-shared-update-v2',
+      '.occludable-update',
+      '[data-urn*="activity"]',
+      '.scaffold-finite-scroll__content > div'
+    ];
+
+    let bestPost = null;
+    let bestScore = -Infinity;
+    const viewportCenter = window.innerHeight / 2;
+
+    for (const selector of postSelectors) {
+      const posts = document.querySelectorAll(selector);
+      for (const post of posts) {
+        const rect = post.getBoundingClientRect();
+        // Skip if not visible
+        if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
+        // Score by proximity to viewport center
+        const center = rect.top + rect.height / 2;
+        const score = -Math.abs(center - viewportCenter);
+        if (score > bestScore) {
+          bestScore = score;
+          bestPost = post;
+        }
+      }
+    }
+    return bestPost;
   }
 
-  function getSelectedTextInEditor(editor) {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return { text: '', range: null };
-    const range = sel.getRangeAt(0);
-    if (!editor.contains(range.commonAncestorContainer)) return { text: '', range: null };
-    return { text: sel.toString(), range };
-  }
-
-  function insertTextAtCursor(editor, text) {
-    editor.focus();
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0) {
-      const range = sel.getRangeAt(0);
-      if (editor.contains(range.commonAncestorContainer)) {
-        range.deleteContents();
-        const textNode = document.createTextNode(text);
-        range.insertNode(textNode);
-        range.setStartAfter(textNode);
-        range.setEndAfter(textNode);
-        sel.removeAllRanges();
-        sel.addRange(range);
-        // Trigger input event so LinkedIn picks up the change
-        editor.dispatchEvent(new Event('input', { bubbles: true }));
+  // ─── Click "see more" to expand truncated posts ───
+  function expandPost(postEl) {
+    if (!postEl) return;
+    const seeMoreSelectors = [
+      'button.feed-shared-inline-show-more-text',
+      'button[aria-label*="see more"]',
+      'button[aria-label*="See more"]',
+      '.feed-shared-text-view__see-more-less-toggle',
+      '.see-more',
+      'button.feed-shared-inline-show-more-text--minimal-padding',
+      '[data-test-id="feed-shared-inline-show-more-text"]'
+    ];
+    for (const sel of seeMoreSelectors) {
+      const btn = postEl.querySelector(sel);
+      if (btn && btn.offsetParent !== null) {
+        btn.click();
         return;
       }
     }
-    // Fallback: append
-    editor.textContent += text;
-    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    // Also try matching by text content
+    const allButtons = postEl.querySelectorAll('button, span[role="button"]');
+    for (const btn of allButtons) {
+      const text = btn.textContent.trim().toLowerCase();
+      if (text === '…see more' || text === 'see more' || text === '...see more') {
+        btn.click();
+        return;
+      }
+    }
   }
 
-  function replaceSelectedText(editor, newText) {
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0) return;
-    const range = sel.getRangeAt(0);
-    if (!editor.contains(range.commonAncestorContainer)) return;
-    range.deleteContents();
-    const textNode = document.createTextNode(newText);
-    range.insertNode(textNode);
-    range.setStartAfter(textNode);
-    range.setEndAfter(textNode);
-    sel.removeAllRanges();
-    sel.addRange(range);
-    editor.dispatchEvent(new Event('input', { bubbles: true }));
+  // ─── Extract text from a post element ───
+  function extractPostText(postEl) {
+    if (!postEl) return null;
+
+    // Helper: clean up extracted text
+    function cleanText(raw) {
+      if (!raw) return '';
+      return raw
+        .replace(/\s*…see more\s*/gi, '')
+        .replace(/\s*\.\.\.see more\s*/gi, '')
+        .replace(/\s*see less\s*/gi, '')
+        .replace(/\n{3,}/g, '\n\n')
+        .trim();
+    }
+
+    // Strategy 1: Collect ALL dir="ltr" spans in the post
+    const dirSpans = postEl.querySelectorAll('span[dir="ltr"]');
+
+    if (dirSpans.length > 0) {
+      const textSpans = Array.from(dirSpans).filter(span => {
+        if (span.closest('button, nav, header, [class*="social-counts"], [class*="actor"], [class*="comment-box"]')) return false;
+        if (span.textContent.trim().length < 2) return false;
+        return true;
+      });
+      if (textSpans.length > 0) {
+        let container = textSpans[0].parentElement;
+        for (let i = 0; i < 5; i++) {
+          if (!container || !container.parentElement) break;
+          const containedSpans = container.querySelectorAll('span[dir="ltr"]');
+          if (containedSpans.length >= textSpans.length) break;
+          container = container.parentElement;
+        }
+
+        if (container) {
+          const text = cleanText(container.textContent);
+          if (text.length > 20) return text;
+        }
+
+        const allText = textSpans.map(s => s.textContent.trim()).filter(Boolean).join('\n');
+        const cleaned = cleanText(allText);
+        if (cleaned.length > 20) return cleaned;
+      }
+    }
+
+    // Strategy 2: Known LinkedIn selectors
+    const textSelectors = [
+      '.feed-shared-text .break-words',
+      '.update-components-text .break-words',
+      '[data-test-id="main-feed-activity-card__commentary"]',
+      '.feed-shared-update-v2__commentary .break-words',
+      '.feed-shared-update-v2__commentary',
+      '.feed-shared-text',
+      '.update-components-text'
+    ];
+
+    for (const sel of textSelectors) {
+      const el = postEl.querySelector(sel);
+      if (el) {
+        let text = cleanText(el.textContent);
+        if (text && text.length > 20) return text;
+        text = cleanText(el.innerText);
+        if (text && text.length > 20) return text;
+      }
+    }
+
+    // Strategy 3: Broadest fallback
+    const skipSelectors = 'button, nav, header, [class*="social-counts"], [class*="actor"], [class*="comment"], footer';
+    const candidates = postEl.querySelectorAll('div, p, span, article');
+    let bestText = '';
+    let bestEl = null;
+
+    for (const el of candidates) {
+      if (el.closest(skipSelectors)) continue;
+      if (el.querySelector('button[aria-label*="Like"], button[aria-label*="Comment"]')) continue;
+      const text = cleanText(el.textContent);
+      if (text.length > bestText.length && text.length > 50) {
+        bestText = text;
+        bestEl = el;
+      }
+    }
+    if (bestText) return bestText;
+    return null;
   }
 
-  // ─── Apply Tools ───
-  function applyTool(action) {
-    const editor = findEditor();
-    if (!editor) {
-      showToast('Open a LinkedIn post editor first!');
+  // ─── Extract author name from a post element ───
+  function extractAuthor(postEl) {
+    if (!postEl) return null;
+
+    const authorSelectors = [
+      '.update-components-actor__name .visually-hidden',
+      '.update-components-actor__title .visually-hidden',
+      '.feed-shared-actor__name .visually-hidden',
+      '.feed-shared-actor__title',
+      '.update-components-actor__name',
+      '.feed-shared-actor__name'
+    ];
+
+    for (const sel of authorSelectors) {
+      const el = postEl.querySelector(sel);
+      if (el && el.textContent.trim()) {
+        return el.textContent.trim().split('\n')[0].trim();
+      }
+    }
+    return null;
+  }
+
+  // ─── Find comment box for the best post ───
+  function findCommentBox(postEl) {
+    if (!postEl) return null;
+
+    // First try within the post element itself
+    const inPostSelectors = [
+      '.comments-comment-box [contenteditable="true"]',
+      '.comments-comment-texteditor [contenteditable="true"]',
+      '.ql-editor[contenteditable="true"]',
+      '[role="textbox"][contenteditable="true"]'
+    ];
+
+    for (const sel of inPostSelectors) {
+      const el = postEl.querySelector(sel);
+      if (el) return el;
+    }
+
+    // Try sibling/nearby comment areas
+    const parent = postEl.parentElement;
+    if (parent) {
+      for (const sel of inPostSelectors) {
+        const el = parent.querySelector(sel);
+        if (el) return el;
+      }
+    }
+
+    return null;
+  }
+
+  // ─── Try to open the comment box ───
+  function openCommentBox(postEl) {
+    if (!postEl) return false;
+
+    const commentBtnSelectors = [
+      'button[aria-label*="Comment"]',
+      'button[aria-label*="comment"]',
+      '.social-actions-button--comment',
+      '.comment-button',
+      'button.comments-comment-social-bar__comment-action'
+    ];
+
+    for (const sel of commentBtnSelectors) {
+      const btn = postEl.querySelector(sel);
+      if (btn) {
+        btn.click();
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // ─── Insert text into a contenteditable element ───
+  function insertText(editor, text) {
+    editor.focus();
+
+    // Clear existing content
+    editor.textContent = '';
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+
+    // Use execCommand for better compatibility with LinkedIn's editor
+    document.execCommand('insertText', false, text);
+
+    // Trigger input events so LinkedIn picks up the change
+    editor.dispatchEvent(new Event('input', { bubbles: true }));
+    editor.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  // ─── Message Handler ───
+  chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+    if (msg.action === 'grabPost') {
+      const post = findBestPost();
+      if (!post) {
+        sendResponse({ text: null });
+        return;
+      }
+
+      // Get text before expanding
+      const textBefore = extractPostText(post) || '';
+
+      // Check if there's even a "see more" button — if not, post is already full
+      const hasSeeMore = post.querySelector(
+        'button.feed-shared-inline-show-more-text, button[aria-label*="see more" i], .feed-shared-text-view__see-more-less-toggle, .see-more'
+      ) || Array.from(post.querySelectorAll('button, span[role="button"]')).some(
+        btn => /^(…|\.\.\.)?see more$/i.test(btn.textContent.trim())
+      );
+
+      if (!hasSeeMore) {
+        // Post is already fully expanded
+        window.__linkedcomment_lastPost = post;
+        sendResponse({ text: textBefore, author: extractAuthor(post) });
+        return;
+      }
+
+      // Use MutationObserver to detect when LinkedIn finishes expanding
+      let resolved = false;
+      const observer = new MutationObserver(() => {
+        if (resolved) return;
+        const textAfter = extractPostText(post);
+        if (textAfter && textAfter.length > textBefore.length) {
+          resolved = true;
+          observer.disconnect();
+          window.__linkedcomment_lastPost = post;
+          sendResponse({ text: textAfter, author: extractAuthor(post) });
+        }
+      });
+
+      observer.observe(post, { childList: true, subtree: true, characterData: true, attributes: true });
+
+      // Click "see more"
+      expandPost(post);
+
+      // Safety timeout — if observer doesn't fire within 3s, return best we have
+      setTimeout(() => {
+        if (resolved) return;
+        resolved = true;
+        observer.disconnect();
+        const text = extractPostText(post);
+        window.__linkedcomment_lastPost = post;
+        sendResponse({ text: text || textBefore, author: extractAuthor(post) });
+      }, 3000);
+
+      return true; // async response
+    }
+
+    if (msg.action === 'insertComment') {
+      const post = window.__linkedcomment_lastPost || findBestPost();
+
+      let commentBox = findCommentBox(post);
+
+      if (!commentBox) {
+        // Try opening the comment box first
+        const opened = openCommentBox(post);
+        if (opened) {
+          // Wait for comment box to appear
+          setTimeout(() => {
+            commentBox = findCommentBox(post);
+            if (commentBox) {
+              insertText(commentBox, msg.text);
+              showToast('Comment inserted!');
+              sendResponse({ ok: true });
+            } else {
+              sendResponse({ ok: false, error: 'Comment box did not open. Click "Comment" manually first.' });
+            }
+          }, 800);
+          return true; // async response
+        }
+        sendResponse({ ok: false, error: 'No comment box found. Click "Comment" on the post first.' });
+        return;
+      }
+
+      insertText(commentBox, msg.text);
+      showToast('Comment inserted!');
+      sendResponse({ ok: true });
       return;
-    }
-
-    const { text, range } = getSelectedTextInEditor(editor);
-
-    switch (action) {
-      case 'bold':
-        if (text) {
-          replaceSelectedText(editor, toBold(text));
-          showToast('Bold applied!');
-        } else {
-          showToast('Select text first, then click Bold');
-        }
-        break;
-
-      case 'italic':
-        if (text) {
-          replaceSelectedText(editor, toItalic(text));
-          showToast('Italic applied!');
-        } else {
-          showToast('Select text first, then click Italic');
-        }
-        break;
-
-      case 'strike':
-        if (text) {
-          const struck = [...text].map(c => c + '\u0336').join('');
-          replaceSelectedText(editor, struck);
-          showToast('Strikethrough applied!');
-        } else {
-          showToast('Select text first');
-        }
-        break;
-
-      case 'bullet':
-        insertTextAtCursor(editor, '\n• ');
-        showToast('Bullet inserted');
-        break;
-
-      case 'arrow':
-        insertTextAtCursor(editor, '\n→ ');
-        showToast('Arrow inserted');
-        break;
-
-      case 'separator':
-        insertTextAtCursor(editor, '\n─────────\n');
-        showToast('Separator inserted');
-        break;
-
-      case 'checklist':
-        insertTextAtCursor(editor, '\n✅ \n❌ ');
-        showToast('Checklist inserted');
-        break;
-
-      case 'emoji_fire':
-        insertTextAtCursor(editor, '🔥');
-        break;
-
-      case 'emoji_pin':
-        insertTextAtCursor(editor, '📌');
-        break;
-
-      case 'emoji_idea':
-        insertTextAtCursor(editor, '💡');
-        break;
-    }
-  }
-
-  // ─── Auto-show when LinkedIn editor is open ───
-  const observer = new MutationObserver(() => {
-    const editor = findEditor();
-    floatBar.classList.toggle('active', !!editor);
-  });
-
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  // ─── Listen for popup messages ───
-  chrome.runtime.onMessage.addListener((msg) => {
-    if (msg.action === 'toggle') {
-      toolbarOpen = !toolbarOpen;
-      miniToolbar.classList.toggle('open', toolbarOpen);
     }
   });
 

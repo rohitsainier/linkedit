@@ -5,560 +5,549 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   :root {
-    --li-blue: #0a66c2;
-    --li-blue-hover: #004182;
-    --li-blue-light: #e8f3ff;
-    --li-bg: #f3f2ef;
-    --li-surface: #ffffff;
-    --li-border: #e0dfdc;
-    --li-text: #191919;
-    --li-text2: #666666;
-    --li-text3: #00000099;
-    --li-green: #057642;
-    --li-green-light: #e8f8ef;
-    --li-orange: #b24020;
-    --li-red: #cc1016;
-    --li-shadow: 0 0 0 1px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
-    --li-shadow-hover: 0 0 0 1px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.12);
-    --li-radius: 8px;
-    --li-radius-lg: 12px;
-    --li-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+    --blue: #0a66c2;
+    --blue-h: #004182;
+    --blue-l: #e8f3ff;
+    --bg: #f3f2ef;
+    --sf: #ffffff;
+    --bd: #e0dfdc;
+    --t1: #191919;
+    --t2: #666666;
+    --t3: #00000099;
+    --green: #057642;
+    --red: #cc1016;
+    --orange: #b24020;
+    --sh: 0 0 0 1px rgba(0,0,0,0.08), 0 2px 8px rgba(0,0,0,0.05);
+    --r: 8px;
+    --f: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   }
 
   body {
-    width: 460px;
-    max-height: 600px;
-    font-family: var(--li-font);
-    background: var(--li-bg);
-    color: var(--li-text);
+    width: 400px;
+    max-height: 580px;
+    font-family: var(--f);
+    background: var(--bg);
+    color: var(--t1);
     overflow-y: auto;
     -webkit-font-smoothing: antialiased;
   }
 
   /* ─── Header ─── */
   .header {
-    background: linear-gradient(135deg, #0a66c2 0%, #0077b5 50%, #004182 100%);
-    padding: 16px 20px;
+    background: linear-gradient(135deg, #0a66c2 0%, #004182 100%);
+    padding: 10px 16px;
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
     position: sticky;
     top: 0;
     z-index: 10;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
   }
   .logo {
-    width: 36px; height: 36px;
+    width: 28px; height: 28px;
     background: rgba(255,255,255,0.2);
-    backdrop-filter: blur(4px);
-    -webkit-backdrop-filter: blur(4px);
-    border-radius: 10px;
+    border-radius: 8px;
     display: flex; align-items: center; justify-content: center;
-    font-weight: 800; font-size: 14px; color: #fff;
+    font-weight: 800; font-size: 11px; color: #fff;
     letter-spacing: -0.5px;
-    border: 1px solid rgba(255,255,255,0.25);
   }
-  .header-text h1 {
-    font-size: 16px;
-    font-weight: 700;
-    letter-spacing: -0.3px;
-    color: #fff;
-  }
-  .header-text p {
-    font-size: 11.5px;
-    color: rgba(255,255,255,0.75);
-    font-weight: 500;
-    margin-top: 1px;
-  }
-
-  /* ─── Tabs ─── */
-  .tabs {
-    display: flex;
-    gap: 0;
-    padding: 0 20px;
-    background: var(--li-surface);
-    border-bottom: 1px solid var(--li-border);
-  }
-  .tab {
-    flex: 1;
-    padding: 12px 4px 10px;
-    text-align: center;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--li-text3);
+  .header h1 { font-size: 14px; font-weight: 700; color: #fff; }
+  .header-right { margin-left: auto; display: flex; gap: 4px; }
+  .hdr-btn {
+    width: 28px; height: 28px;
+    border: none;
+    background: rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: rgba(255,255,255,0.85);
     cursor: pointer;
-    border: none;
-    border-bottom: 2px solid transparent;
-    background: none;
-    font-family: var(--li-font);
-    transition: color 0.2s, border-color 0.2s;
-    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    transition: background 0.15s;
   }
-  .tab:hover {
-    color: var(--li-text);
-    background: rgba(0,0,0,0.03);
-  }
-  .tab.active {
-    color: var(--li-blue);
-    border-bottom-color: var(--li-blue);
-    background: none;
-  }
+  .hdr-btn:hover { background: rgba(255,255,255,0.3); color: #fff; }
 
-  /* ─── Panels ─── */
-  .panel {
-    display: none;
-    padding: 16px 20px 20px;
-    animation: panelIn 0.2s ease;
+  /* ─── Sections ─── */
+  .section {
+    background: var(--sf);
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--bd);
   }
-  .panel.active { display: block; }
-  @keyframes panelIn {
-    from { opacity: 0; transform: translateY(4px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* ─── Editor Area ─── */
-  .editor-wrap {
-    position: relative;
-    margin-bottom: 12px;
-  }
-  textarea {
-    width: 100%;
-    min-height: 140px;
-    padding: 14px;
-    border: none;
-    border-radius: var(--li-radius);
-    font-family: var(--li-font);
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--li-text);
-    background: var(--li-surface);
-    box-shadow: var(--li-shadow);
-    resize: vertical;
-    transition: box-shadow 0.2s;
-    outline: none;
-  }
-  textarea:focus {
-    box-shadow: 0 0 0 2px var(--li-blue), 0 4px 12px rgba(10,102,194,0.1);
-  }
-  textarea::placeholder {
-    color: var(--li-text3);
-    font-weight: 400;
-  }
-
-  .editor-footer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-top: 8px;
-    padding: 0 2px;
-  }
-  .char-count {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--li-text3);
-    font-family: var(--li-font);
-    font-variant-numeric: tabular-nums;
-  }
-  .char-count.warn { color: var(--li-orange); font-weight: 600; }
-  .char-count.over { color: var(--li-red); font-weight: 700; }
-
-  /* ─── Section Labels ─── */
   .section-label {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--li-text2);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    margin: 16px 0 10px;
-    padding-bottom: 4px;
-  }
-  .section-label:first-child { margin-top: 0; }
-
-  /* ─── Format Toolbar ─── */
-  .toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    margin-bottom: 14px;
-  }
-  .tool-btn {
-    padding: 7px 14px;
-    border: 1px solid var(--li-border);
-    border-radius: 16px;
-    font-size: 12px;
-    font-weight: 600;
-    color: var(--li-text2);
-    background: var(--li-surface);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    font-family: var(--li-font);
-    white-space: nowrap;
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-  }
-  .tool-btn:hover {
-    border-color: var(--li-blue);
-    color: #fff;
-    background: var(--li-blue);
-    box-shadow: 0 2px 8px rgba(10,102,194,0.25);
-  }
-  .tool-btn:active { transform: scale(0.95); }
-
-  /* ─── Separator Grid ─── */
-  .sep-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 6px;
-    margin-bottom: 12px;
-  }
-  .sep-btn {
-    padding: 9px 4px;
-    border: 1px solid var(--li-border);
-    border-radius: var(--li-radius);
     font-size: 11px;
-    text-align: center;
-    background: var(--li-surface);
-    cursor: pointer;
-    font-family: var(--li-font);
-    transition: all 0.2s ease;
-    color: var(--li-text2);
-    box-shadow: 0 1px 2px rgba(0,0,0,0.04);
-  }
-  .sep-btn:hover {
-    border-color: var(--li-blue);
-    color: var(--li-blue);
-    background: var(--li-blue-light);
-    box-shadow: 0 2px 6px rgba(10,102,194,0.12);
+    font-weight: 700;
+    color: var(--t2);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 8px;
   }
 
-  /* ─── Hashtags ─── */
-  .hashtag-row {
+  /* ─── Post Capture ─── */
+  .grab-row {
     display: flex;
-    flex-wrap: wrap;
     gap: 6px;
-    margin-top: 10px;
+    margin-bottom: 8px;
   }
-  .hashtag {
-    padding: 5px 12px;
-    border-radius: 16px;
-    font-size: 12px;
-    font-weight: 600;
-    background: var(--li-surface);
-    color: var(--li-blue);
-    cursor: pointer;
-    transition: all 0.2s ease;
-    border: 1px solid var(--li-border);
-    font-family: var(--li-font);
-  }
-  .hashtag:hover {
-    background: var(--li-blue);
-    color: #fff;
-    border-color: var(--li-blue);
-    box-shadow: 0 2px 8px rgba(10,102,194,0.25);
-  }
-
-  /* ─── Action Buttons ─── */
-  .actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 16px;
-  }
-  .btn-primary {
+  .grab-btn {
     flex: 1;
-    padding: 12px 20px;
-    background: var(--li-blue);
+    padding: 8px 12px;
+    background: var(--blue);
     color: #fff;
     border: none;
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 700;
-    font-family: var(--li-font);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--f);
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: 0 2px 8px rgba(10,102,194,0.2);
-  }
-  .btn-primary:hover {
-    background: var(--li-blue-hover);
-    box-shadow: 0 4px 16px rgba(10,102,194,0.35);
-  }
-  .btn-primary:active { transform: scale(0.98); }
-  .btn-secondary {
-    padding: 12px 20px;
-    background: var(--li-surface);
-    color: var(--li-blue);
-    border: 1.5px solid var(--li-blue);
-    border-radius: 20px;
-    font-size: 14px;
-    font-weight: 700;
-    font-family: var(--li-font);
-    cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .btn-secondary:hover {
-    background: var(--li-blue-light);
-    border-color: var(--li-blue-hover);
-  }
-
-  .btn-success {
-    background: var(--li-green) !important;
-    box-shadow: 0 2px 8px rgba(5,118,66,0.25) !important;
-  }
-
-  /* ─── Emoji Grid ─── */
-  .emoji-grid {
-    display: grid;
-    grid-template-columns: repeat(10, 1fr);
-    gap: 3px;
-    margin-bottom: 12px;
-  }
-  .emoji-btn {
-    width: 100%;
-    aspect-ratio: 1;
+    transition: background 0.15s;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
-    border: none;
-    background: none;
-    border-radius: var(--li-radius);
-    cursor: pointer;
-    transition: all 0.15s ease;
+    gap: 6px;
   }
-  .emoji-btn:hover {
-    background: var(--li-blue-light);
-    transform: scale(1.2);
-    box-shadow: 0 2px 8px rgba(10,102,194,0.12);
-  }
+  .grab-btn:hover { background: var(--blue-h); }
+  .grab-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+  .grab-btn svg { flex-shrink: 0; }
 
-  /* ─── Emoji Categories ─── */
-  .emoji-cats {
-    display: flex;
-    gap: 4px;
-    margin-bottom: 10px;
-    overflow-x: auto;
-    padding-bottom: 2px;
-  }
-  .emoji-cat {
-    padding: 6px 12px;
+  .paste-toggle {
+    padding: 8px 12px;
+    background: var(--bg);
+    color: var(--t2);
+    border: none;
+    border-radius: 6px;
     font-size: 12px;
     font-weight: 600;
-    border: 1px solid var(--li-border);
-    background: var(--li-surface);
-    border-radius: 16px;
+    font-family: var(--f);
     cursor: pointer;
-    flex-shrink: 0;
-    font-family: var(--li-font);
-    transition: all 0.2s ease;
-    color: var(--li-text2);
+    transition: all 0.15s;
   }
-  .emoji-cat:hover {
-    border-color: var(--li-blue);
-    color: var(--li-blue);
-    background: var(--li-blue-light);
+  .paste-toggle:hover { background: #e5e4e0; }
+
+  .post-preview {
+    background: var(--bg);
+    border-radius: var(--r);
+    padding: 10px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--t1);
+    max-height: 150px;
+    overflow-y: auto;
+    display: none;
+    border-left: 3px solid var(--blue);
   }
-  .emoji-cat.active {
-    background: var(--li-blue);
-    color: #fff;
-    border-color: var(--li-blue);
+  .post-preview.visible { display: block; }
+  .post-preview .post-author {
+    font-weight: 700;
+    font-size: 11px;
+    color: var(--t2);
+    margin-bottom: 4px;
   }
 
-  /* ─── Template Cards ─── */
-  .template-card {
-    background: var(--li-surface);
-    border: none;
-    border-radius: var(--li-radius-lg);
-    padding: 14px 16px;
+  .paste-area {
+    display: none;
+    width: 100%;
+    min-height: 60px;
+    padding: 8px 10px;
+    border: 1px solid var(--bd);
+    border-radius: var(--r);
+    font-family: var(--f);
+    font-size: 12px;
+    color: var(--t1);
+    resize: vertical;
+    outline: none;
+  }
+  .paste-area:focus { border-color: var(--blue); }
+  .paste-area.visible { display: block; }
+
+  /* ─── Style Pills ─── */
+  .style-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
     margin-bottom: 10px;
+  }
+  .style-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--bd);
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--t2);
+    background: var(--sf);
     cursor: pointer;
-    transition: all 0.2s ease;
-    box-shadow: var(--li-shadow);
+    font-family: var(--f);
+    transition: all 0.15s;
   }
-  .template-card:hover {
-    box-shadow: var(--li-shadow-hover);
-    transform: translateY(-2px);
+  .style-btn.active { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .style-btn:hover:not(.active) { border-color: var(--blue); color: var(--blue); }
+
+  /* ─── Angle input ─── */
+  .angle-input {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--bd);
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: var(--f);
+    color: var(--t1);
+    outline: none;
+    margin-bottom: 10px;
   }
-  .template-card h3 {
-    font-size: 14px;
+  .angle-input:focus { border-color: var(--blue); }
+  .angle-input::placeholder { color: var(--t3); }
+
+  /* ─── Generate button ─── */
+  .gen-btn {
+    width: 100%;
+    padding: 10px;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
     font-weight: 700;
-    margin-bottom: 6px;
+    font-family: var(--f);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .gen-btn:hover { background: var(--blue-h); }
+  .gen-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+  /* ─── Output ─── */
+  .output-wrap {
+    margin-top: 10px;
+    display: none;
+    animation: fadeUp 0.2s ease;
+  }
+  .output-wrap.visible { display: block; }
+
+  .comment-preview {
+    background: var(--sf);
+    border-radius: var(--r);
+    padding: 12px 14px;
+    box-shadow: var(--sh);
+    margin-bottom: 8px;
+  }
+  .comment-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    color: var(--li-text);
+    margin-bottom: 8px;
   }
-  .template-card p {
-    font-size: 12px;
-    color: var(--li-text2);
-    line-height: 1.55;
-    white-space: pre-line;
-  }
-  .template-tag {
-    font-size: 10px;
+  .comment-avatar {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #0a66c2, #004182);
+    display: flex; align-items: center; justify-content: center;
+    color: #fff;
     font-weight: 700;
-    padding: 3px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.4px;
+    font-size: 13px;
+    flex-shrink: 0;
   }
-  .template-tag.hook { background: #fef3c7; color: #92400e; }
-  .template-tag.story { background: var(--li-blue-light); color: var(--li-blue); }
-  .template-tag.list { background: var(--li-green-light); color: var(--li-green); }
-  .template-tag.cta { background: #fce7f3; color: #9d174d; }
-
-  /* ─── Preview Box ─── */
-  .preview-box {
-    background: var(--li-surface);
-    border: none;
-    border-radius: var(--li-radius-lg);
-    padding: 16px;
-    font-size: 14px;
-    line-height: 1.6;
-    color: var(--li-text);
-    white-space: pre-wrap;
+  .comment-meta {
+    font-size: 11px;
+    color: var(--t2);
+    line-height: 1.3;
+  }
+  .comment-meta .name {
+    font-weight: 700;
+    font-size: 12px;
+    color: var(--t1);
+  }
+  .comment-text {
+    font-size: 13px;
+    line-height: 1.55;
+    color: var(--t1);
     word-break: break-word;
-    min-height: 120px;
-    max-height: 320px;
-    overflow-y: auto;
-    box-shadow: var(--li-shadow);
   }
+  .comment-text p {
+    margin: 0 0 6px 0;
+  }
+  .comment-text p:last-child { margin-bottom: 0; }
+
+  .output-actions {
+    display: flex;
+    gap: 6px;
+  }
+  .output-actions button {
+    flex: 1;
+    padding: 8px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    font-family: var(--f);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-copy {
+    background: var(--blue);
+    color: #fff;
+    border: none;
+  }
+  .btn-copy:hover { background: var(--blue-h); }
+  .btn-insert {
+    background: var(--green);
+    color: #fff;
+    border: none;
+  }
+  .btn-insert:hover { background: #045e34; }
+  .btn-regen {
+    background: var(--sf);
+    color: var(--blue);
+    border: 1px solid var(--blue);
+    max-width: 90px;
+  }
+  .btn-regen:hover { background: var(--blue-l); }
+  .btn-success { background: var(--green) !important; }
+
+  /* ─── Loading & Error ─── */
+  .loading {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    padding: 14px 0;
+    color: var(--t2);
+    font-size: 12px;
+    font-weight: 500;
+  }
+  .loading.visible { display: flex; }
+  .spinner {
+    width: 16px; height: 16px;
+    border: 2px solid var(--bd);
+    border-top-color: var(--blue);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(3px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .error {
+    display: none;
+    background: #fef2f2;
+    color: var(--red);
+    border: 1px solid #fecaca;
+    border-radius: var(--r);
+    padding: 8px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    margin-top: 8px;
+    line-height: 1.4;
+  }
+  .error.visible { display: block; }
+
+  /* ─── Settings Overlay ─── */
+  .settings-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0,0,0,0.4);
+    z-index: 50;
+    display: flex; align-items: center; justify-content: center;
+    animation: fadeIn 0.15s ease;
+  }
+  @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+  .settings-panel {
+    background: var(--sf);
+    border-radius: 12px;
+    width: 340px;
+    box-shadow: 0 12px 48px rgba(0,0,0,0.2);
+    overflow: hidden;
+  }
+  .settings-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--bd);
+  }
+  .settings-header h2 { font-size: 14px; font-weight: 700; }
+  .settings-close {
+    width: 24px; height: 24px;
+    border: none; background: none;
+    color: var(--t2); cursor: pointer;
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .settings-close:hover { background: var(--bg); }
+  .settings-body { padding: 14px 16px; }
+  .s-label {
+    font-size: 11px; font-weight: 700; color: var(--t2);
+    text-transform: uppercase; letter-spacing: 0.4px;
+    margin-bottom: 6px; display: block;
+  }
+  .s-url-row { display: flex; gap: 6px; margin-bottom: 4px; }
+  .s-input {
+    flex: 1;
+    padding: 8px 10px;
+    border: 1px solid var(--bd);
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: var(--f);
+    color: var(--t1);
+    outline: none;
+  }
+  .s-input:focus { border-color: var(--blue); }
+  .s-fetch-btn {
+    padding: 8px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--sf);
+    color: var(--blue);
+    border: 1px solid var(--blue);
+    border-radius: 6px;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: var(--f);
+  }
+  .s-fetch-btn:hover { background: var(--blue-l); }
+  .settings-status { font-size: 11px; font-weight: 500; margin: 4px 0 10px; min-height: 16px; }
+  .settings-status.ok { color: var(--green); }
+  .settings-status.err { color: var(--red); }
+  .s-select {
+    width: 100%;
+    padding: 8px 10px;
+    border: 1px solid var(--bd);
+    border-radius: 6px;
+    font-size: 12px;
+    font-family: var(--f);
+    color: var(--t1);
+    outline: none; cursor: pointer;
+  }
+  .s-select:disabled { background: var(--bg); color: var(--t3); cursor: not-allowed; }
+  .s-save {
+    width: 100%;
+    margin-top: 12px;
+    padding: 9px;
+    background: var(--blue);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    font-family: var(--f);
+    cursor: pointer;
+  }
+  .s-save:hover { background: var(--blue-h); }
 
   /* ─── Toast ─── */
   .toast {
     position: fixed;
-    bottom: 16px;
+    bottom: 12px;
     left: 50%;
-    transform: translateX(-50%) translateY(12px);
-    background: var(--li-text);
+    transform: translateX(-50%) translateY(10px);
+    background: var(--t1);
     color: #fff;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    padding: 10px 22px;
-    border-radius: 20px;
+    padding: 8px 18px;
+    border-radius: 16px;
     opacity: 0;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
     pointer-events: none;
     z-index: 99;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.2);
-    font-family: var(--li-font);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    font-family: var(--f);
   }
-  .toast.show {
-    opacity: 1;
-    transform: translateX(-50%) translateY(0);
-  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
   /* ─── Scrollbar ─── */
   ::-webkit-scrollbar { width: 3px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: #c7c5c0; border-radius: 3px; }
-  ::-webkit-scrollbar-thumb:hover { background: #a8a6a1; }
 </style>
 </head>
 <body>
 
 <div class="header">
-  <div class="logo">Le</div>
-  <div class="header-text">
-    <h1>LinkeEdit</h1>
-    <p>Format posts that stand out</p>
+  <div class="logo">Lc</div>
+  <h1>LinkedComment</h1>
+  <div class="header-right">
+    <button class="hdr-btn" id="settingsGear" title="Ollama Settings">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
   </div>
 </div>
 
-<div class="tabs">
-  <button class="tab active" data-tab="format">Format</button>
-  <button class="tab" data-tab="emoji">Emojis</button>
-  <button class="tab" data-tab="templates">Templates</button>
-  <button class="tab" data-tab="preview">Preview</button>
+<!-- POST CAPTURE -->
+<div class="section">
+  <div class="section-label">LinkedIn Post</div>
+  <div class="grab-row">
+    <button class="grab-btn" id="grabBtn">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg>
+      Grab Post from LinkedIn
+    </button>
+    <button class="paste-toggle" id="pasteToggle">Paste</button>
+  </div>
+  <div class="post-preview" id="postPreview">
+    <div class="post-author" id="postAuthor"></div>
+    <div id="postText"></div>
+  </div>
+  <textarea class="paste-area" id="pasteArea" placeholder="Paste LinkedIn post text here..." rows="3"></textarea>
 </div>
 
-<!-- FORMAT TAB -->
-<div class="panel active" id="tab-format">
-  <div class="section-label">Your post</div>
-  <div class="editor-wrap">
-    <textarea id="mainEditor" placeholder="Write or paste your LinkedIn post here..."></textarea>
-    <div class="editor-footer">
-      <span class="char-count" id="charCount">0 / 3,000</span>
-      <span class="char-count" id="lineCount">0 lines</span>
+<!-- COMMENT STYLE & GENERATION -->
+<div class="section">
+  <div class="section-label">Comment Style</div>
+  <div class="style-row">
+    <button class="style-btn active" data-style="insightful">Insightful</button>
+    <button class="style-btn" data-style="supportive">Supportive</button>
+    <button class="style-btn" data-style="curious">Curious</button>
+    <button class="style-btn" data-style="contrarian">Contrarian</button>
+    <button class="style-btn" data-style="criticize">Criticize</button>
+  </div>
+
+  <input type="text" class="angle-input" id="angleInput" placeholder="Your angle (optional) — e.g. &quot;from a startup founder perspective&quot;">
+
+  <button class="gen-btn" id="generateBtn">Generate Comment</button>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <span>Crafting your comment...</span>
+  </div>
+
+  <div class="error" id="error"></div>
+
+  <div class="output-wrap" id="outputWrap">
+    <div class="comment-preview">
+      <div class="comment-header">
+        <div class="comment-avatar" id="commentAvatar">Y</div>
+        <div class="comment-meta">
+          <div class="name">You</div>
+          <div>Just now</div>
+        </div>
+      </div>
+      <div class="comment-text" id="commentText"></div>
+    </div>
+    <div class="output-actions">
+      <button class="btn-copy" id="copyBtn">Copy</button>
+      <button class="btn-insert" id="insertBtn">Insert into LinkedIn</button>
+      <button class="btn-regen" id="regenBtn">Redo</button>
     </div>
   </div>
-
-  <div class="section-label">Text styles (Unicode)</div>
-  <div class="toolbar" id="fontToolbar">
-    <button class="tool-btn" data-font="bold" title="Bold text">𝗕 Bold</button>
-    <button class="tool-btn" data-font="italic" title="Italic text">𝘐 Italic</button>
-    <button class="tool-btn" data-font="boldItalic" title="Bold italic">𝘽𝙄</button>
-    <button class="tool-btn" data-font="monospace" title="Monospace">𝙼 Mono</button>
-    <button class="tool-btn" data-font="script" title="Script font">𝒮𝒸𝓇𝒾𝓅𝓉</button>
-    <button class="tool-btn" data-font="fraktur" title="Fraktur / Gothic">𝔉𝔯𝔞𝔨𝔱𝔲𝔯</button>
-    <button class="tool-btn" data-font="doubleStruck" title="Double-struck">𝔻𝕓𝕝</button>
-    <button class="tool-btn" data-font="circled" title="Circled letters">Ⓒⓘⓡⓒ</button>
-    <button class="tool-btn" data-font="squared" title="Squared letters">🅂🅀🅁</button>
-    <button class="tool-btn" data-font="smallCaps" title="Small caps">ꜱᴍᴀʟʟ</button>
-    <button class="tool-btn" data-font="strikethrough" title="Strikethrough">S̶t̶r̶i̶k̶e̶</button>
-    <button class="tool-btn" data-font="underline" title="Underline">U̲n̲d̲e̲r̲</button>
-  </div>
-
-  <div class="section-label">Separators & Bullets</div>
-  <div class="sep-grid" id="sepGrid">
-    <button class="sep-btn" data-sep="─────────">━━━━</button>
-    <button class="sep-btn" data-sep="• ">• Bullet</button>
-    <button class="sep-btn" data-sep="→ ">→ Arrow</button>
-    <button class="sep-btn" data-sep="✦ ">✦ Star</button>
-    <button class="sep-btn" data-sep="▸ ">▸ Play</button>
-    <button class="sep-btn" data-sep="◆ ">◆ Diamond</button>
-    <button class="sep-btn" data-sep="⟡ ">⟡ Sparkle</button>
-    <button class="sep-btn" data-sep="│ ">│ Line</button>
-    <button class="sep-btn" data-sep="◇ ">◇ Hollow</button>
-    <button class="sep-btn" data-sep="⁃ ">⁃ Dash</button>
-    <button class="sep-btn" data-sep="꘎꘎꘎꘎꘎꘎꘎꘎꘎">꘎꘎꘎꘎</button>
-    <button class="sep-btn" data-sep="⌁⌁⌁⌁⌁⌁⌁⌁⌁">⌁⌁⌁⌁</button>
-  </div>
-
-  <div class="section-label">Quick hashtags</div>
-  <div class="hashtag-row" id="hashtagRow">
-    <button class="hashtag">#Leadership</button>
-    <button class="hashtag">#Startups</button>
-    <button class="hashtag">#Tech</button>
-    <button class="hashtag">#AI</button>
-    <button class="hashtag">#Productivity</button>
-    <button class="hashtag">#Growth</button>
-    <button class="hashtag">#Career</button>
-    <button class="hashtag">#SaaS</button>
-    <button class="hashtag">#Marketing</button>
-    <button class="hashtag">#Design</button>
-    <button class="hashtag">#WebDev</button>
-    <button class="hashtag">#Hiring</button>
-  </div>
-
-  <div class="actions">
-    <button class="btn-primary" id="copyBtn">Copy to Clipboard</button>
-    <button class="btn-secondary" id="clearBtn">Clear</button>
-  </div>
 </div>
 
-<!-- EMOJI TAB -->
-<div class="panel" id="tab-emoji">
-  <div class="emoji-cats" id="emojiCats"></div>
-  <div class="emoji-grid" id="emojiGrid"></div>
-  <div class="section-label" style="margin-top:8px">Click to insert at cursor or append to post</div>
-</div>
+<!-- SETTINGS OVERLAY -->
+<div class="settings-overlay" id="settingsOverlay" style="display:none">
+  <div class="settings-panel">
+    <div class="settings-header">
+      <h2>Ollama Settings</h2>
+      <button class="settings-close" id="settingsClose">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="settings-body">
+      <label class="s-label">Ollama Server URL</label>
+      <div class="s-url-row">
+        <input type="text" id="ollamaUrl" class="s-input" value="http://localhost:11434" placeholder="http://localhost:11434">
+        <button class="s-fetch-btn" id="fetchModelsBtn">Fetch Models</button>
+      </div>
+      <div class="settings-status" id="ollamaStatus"></div>
 
-<!-- TEMPLATES TAB -->
-<div class="panel" id="tab-templates">
-  <div class="section-label">Hook starters</div>
-  <div id="hookTemplates"></div>
+      <label class="s-label">Model</label>
+      <select id="ollamaModel" class="s-select" disabled>
+        <option value="">Fetch models first...</option>
+      </select>
 
-  <div class="section-label">Post frameworks</div>
-  <div id="frameworkTemplates"></div>
-</div>
-
-<!-- PREVIEW TAB -->
-<div class="panel" id="tab-preview">
-  <div class="section-label">LinkedIn preview</div>
-  <div class="preview-box" id="previewBox">Start typing in the Format tab to see a preview...</div>
-  <div class="editor-footer" style="margin-top:8px">
-    <span class="char-count" id="previewCharCount">0 / 3,000</span>
-  </div>
-  <div class="actions">
-    <button class="btn-primary" id="previewCopyBtn">Copy to Clipboard</button>
+      <button class="s-save" id="saveSettingsBtn">Save Settings</button>
+    </div>
   </div>
 </div>
 
