@@ -303,24 +303,48 @@
     if (!postEl) return null;
 
     const selectors = [
+      // SDUI: contenteditable with role="textbox"
       '[role="textbox"][contenteditable="true"]',
+      // SDUI: data-testid based comment input
+      '[data-testid="comment-texteditor"] [contenteditable="true"]',
+      // SDUI: aria-label based
+      '[aria-label="Write a comment…"][contenteditable="true"]',
+      '[aria-label="Write a comment"][contenteditable="true"]',
+      '[aria-placeholder="Add a comment…"][contenteditable="true"]',
+      // Generic contenteditable inside the post
+      '[contenteditable="true"]',
+      // Legacy
       '.ql-editor[contenteditable="true"]',
       '.comments-comment-box [contenteditable="true"]',
       '.comments-comment-texteditor [contenteditable="true"]'
     ];
 
+    // Search within the post element first
     for (const sel of selectors) {
       const el = postEl.querySelector(sel);
       if (el) return el;
     }
 
-    const parent = postEl.parentElement;
-    if (parent) {
+    // Walk up several parent levels (SDUI renders comment box outside post sometimes)
+    let ancestor = postEl.parentElement;
+    for (let i = 0; i < 5 && ancestor; i++) {
       for (const sel of selectors) {
-        const el = parent.querySelector(sel);
+        const el = ancestor.querySelector(sel);
         if (el) return el;
       }
+      ancestor = ancestor.parentElement;
     }
+
+    // Last resort: find the nearest comment box in the next sibling containers
+    let sibling = postEl.nextElementSibling;
+    for (let i = 0; i < 3 && sibling; i++) {
+      for (const sel of selectors) {
+        const el = sibling.querySelector(sel);
+        if (el) return el;
+      }
+      sibling = sibling.nextElementSibling;
+    }
+
     return null;
   }
 
@@ -714,16 +738,23 @@ Rules:
         if (!box) {
           const opened = openCommentBox(postEl);
           if (opened) {
-            setTimeout(() => {
+            // Retry with increasing delays — SDUI renders async
+            let retries = 0;
+            const maxRetries = 5;
+            const tryFind = () => {
               box = findCommentBox(postEl);
               if (box) {
                 insertText(box, lastComment);
                 showToast('Comment inserted!');
                 closeActiveWidget();
+              } else if (retries < maxRetries) {
+                retries++;
+                setTimeout(tryFind, 400 * retries);
               } else {
                 showToast('Comment box not found. Click "Comment" first.');
               }
-            }, 800);
+            };
+            setTimeout(tryFind, 500);
             return;
           }
           showToast('Click "Comment" on the post first.');
@@ -998,16 +1029,23 @@ Rules:
       if (!commentBox) {
         const opened = openCommentBox(post);
         if (opened) {
-          setTimeout(() => {
+          // Retry with increasing delays — SDUI renders async
+          let retries = 0;
+          const maxRetries = 5;
+          const tryFind = () => {
             commentBox = findCommentBox(post);
             if (commentBox) {
               insertText(commentBox, msg.text);
               showToast('Comment inserted!');
               sendResponse({ ok: true });
+            } else if (retries < maxRetries) {
+              retries++;
+              setTimeout(tryFind, 400 * retries);
             } else {
               sendResponse({ ok: false, error: 'Comment box did not open. Click "Comment" manually first.' });
             }
-          }, 800);
+          };
+          setTimeout(tryFind, 500);
           return true;
         }
         sendResponse({ ok: false, error: 'No comment box found. Click "Comment" on the post first.' });
