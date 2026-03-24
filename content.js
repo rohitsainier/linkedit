@@ -3,6 +3,9 @@
   if (window.__linkedcomment_loaded) return;
   window.__linkedcomment_loaded = true;
 
+  const DEBUG = true;
+  function log(...args) { if (DEBUG) console.log('[LinkedComment]', ...args); }
+
   // ─── Toast UI ───
   const toastEl = document.createElement('div');
   toastEl.id = 'linkedcomment-toast';
@@ -18,44 +21,36 @@
   let darkModeSetting = 'auto'; // 'auto', 'light', 'dark'
 
   function isLinkedInDark() {
-    // LinkedIn uses .theme--dark on <body> or data attributes for dark mode
     return document.body.classList.contains('theme--dark') ||
            document.documentElement.classList.contains('theme--dark') ||
            document.documentElement.getAttribute('data-theme') === 'dark' ||
            document.body.getAttribute('data-theme') === 'dark';
   }
 
-  let _applyingDark = false; // guard against infinite MutationObserver loop
+  let _applyingDark = false;
   function applyDarkMode() {
     if (_applyingDark) return;
     _applyingDark = true;
-
     let shouldBeDark = false;
     if (darkModeSetting === 'dark') {
       shouldBeDark = true;
     } else if (darkModeSetting === 'auto') {
       shouldBeDark = isLinkedInDark();
     }
-    // else 'light' → shouldBeDark stays false
-
     if (shouldBeDark) {
       document.documentElement.classList.add('linkedcomment-dark');
     } else {
       document.documentElement.classList.remove('linkedcomment-dark');
     }
-
     _applyingDark = false;
   }
 
-  // Watch for LinkedIn theme changes (auto mode)
-  // Only observe <body> — not <html> — because we modify <html> class ourselves
   const themeObserver = new MutationObserver(() => {
     if (darkModeSetting === 'auto') applyDarkMode();
   });
   if (document.body) {
     themeObserver.observe(document.body, { attributes: true, attributeFilter: ['class', 'data-theme'] });
   } else {
-    // Fallback: wait for body to be ready
     const bodyWait = setInterval(() => {
       if (document.body) {
         clearInterval(bodyWait);
@@ -64,33 +59,66 @@
     }, 200);
   }
 
+  // ─── Find all feed posts (SDUI-compatible) ───
+  // LinkedIn SDUI wraps each feed post in a container with an <h2> containing "Feed post".
+  // Falls back to legacy selectors for older LinkedIn versions.
+  function findAllFeedPosts() {
+    const posts = [];
+    const seen = new Set();
+
+    // Strategy 1 (SDUI): h2 containing "Feed post" screen-reader text
+    document.querySelectorAll('h2').forEach(h2 => {
+      const text = h2.textContent.trim();
+      if (text === 'Feed post' || text.startsWith('Feed post')) {
+        const container = h2.parentElement;
+        if (container && !seen.has(container)) {
+          seen.add(container);
+          posts.push(container);
+        }
+      }
+    });
+
+    if (posts.length > 0) {
+      log(`Found ${posts.length} posts via SDUI h2 strategy`);
+      return posts;
+    }
+
+    // Strategy 2 (Legacy): .occludable-update
+    document.querySelectorAll('.occludable-update').forEach(el => {
+      if (!el.parentElement?.closest('.occludable-update')) {
+        if (!seen.has(el)) { seen.add(el); posts.push(el); }
+      }
+    });
+
+    if (posts.length > 0) {
+      log(`Found ${posts.length} posts via legacy .occludable-update`);
+      return posts;
+    }
+
+    // Strategy 3 (Fallback): data-urn containing activity
+    document.querySelectorAll('[data-urn*="urn:li:activity"]').forEach(el => {
+      if (!seen.has(el)) { seen.add(el); posts.push(el); }
+    });
+
+    log(`Found ${posts.length} posts via fallback strategies`);
+    return posts;
+  }
+
   // ─── Find the most visible LinkedIn post ───
   function findBestPost() {
-    // LinkedIn feed post selectors (multiple patterns for different layouts)
-    const postSelectors = [
-      '.feed-shared-update-v2',
-      '.occludable-update',
-      '[data-urn*="activity"]',
-      '.scaffold-finite-scroll__content > div'
-    ];
-
+    const posts = findAllFeedPosts();
     let bestPost = null;
     let bestScore = -Infinity;
     const viewportCenter = window.innerHeight / 2;
 
-    for (const selector of postSelectors) {
-      const posts = document.querySelectorAll(selector);
-      for (const post of posts) {
-        const rect = post.getBoundingClientRect();
-        // Skip if not visible
-        if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
-        // Score by proximity to viewport center
-        const center = rect.top + rect.height / 2;
-        const score = -Math.abs(center - viewportCenter);
-        if (score > bestScore) {
-          bestScore = score;
-          bestPost = post;
-        }
+    for (const post of posts) {
+      const rect = post.getBoundingClientRect();
+      if (rect.bottom < 0 || rect.top > window.innerHeight) continue;
+      const center = rect.top + rect.height / 2;
+      const score = -Math.abs(center - viewportCenter);
+      if (score > bestScore) {
+        bestScore = score;
+        bestPost = post;
       }
     }
     return bestPost;
@@ -99,7 +127,16 @@
   // ─── Click "see more" to expand truncated posts ───
   function expandPost(postEl) {
     if (!postEl) return;
-    const seeMoreSelectors = [
+
+    // Strategy 1 (SDUI): data-testid
+    const testIdBtn = postEl.querySelector('[data-testid="expandable-text-button"]');
+    if (testIdBtn && testIdBtn.offsetParent !== null) {
+      testIdBtn.click();
+      return;
+    }
+
+    // Strategy 2 (Legacy selectors)
+    const legacySelectors = [
       'button.feed-shared-inline-show-more-text',
       'button[aria-label*="see more"]',
       'button[aria-label*="See more"]',
@@ -108,18 +145,20 @@
       'button.feed-shared-inline-show-more-text--minimal-padding',
       '[data-test-id="feed-shared-inline-show-more-text"]'
     ];
-    for (const sel of seeMoreSelectors) {
+    for (const sel of legacySelectors) {
       const btn = postEl.querySelector(sel);
       if (btn && btn.offsetParent !== null) {
         btn.click();
         return;
       }
     }
-    // Also try matching by text content
+
+    // Strategy 3: Match by text content
     const allButtons = postEl.querySelectorAll('button, span[role="button"]');
     for (const btn of allButtons) {
       const text = btn.textContent.trim().toLowerCase();
-      if (text === '…see more' || text === 'see more' || text === '...see more') {
+      if (text === '…see more' || text === 'see more' || text === '...see more' ||
+          text === '… more' || text === '…more') {
         btn.click();
         return;
       }
@@ -130,10 +169,10 @@
   function extractPostText(postEl) {
     if (!postEl) return null;
 
-    // Helper: clean up extracted text
     function cleanText(raw) {
       if (!raw) return '';
       return raw
+        .replace(/\s*…\s*more\s*/gi, '')
         .replace(/\s*…see more\s*/gi, '')
         .replace(/\s*\.\.\.see more\s*/gi, '')
         .replace(/\s*see less\s*/gi, '')
@@ -141,12 +180,21 @@
         .trim();
     }
 
-    // Strategy 1: Collect ALL dir="ltr" spans in the post
-    const dirSpans = postEl.querySelectorAll('span[dir="ltr"]');
+    // Strategy 1 (SDUI): data-testid="expandable-text-box"
+    const textBox = postEl.querySelector('[data-testid="expandable-text-box"]');
+    if (textBox) {
+      const text = cleanText(textBox.textContent);
+      if (text.length > 20) {
+        log('Text extracted via data-testid="expandable-text-box"');
+        return text;
+      }
+    }
 
+    // Strategy 2: Collect dir="ltr" spans
+    const dirSpans = postEl.querySelectorAll('span[dir="ltr"]');
     if (dirSpans.length > 0) {
       const textSpans = Array.from(dirSpans).filter(span => {
-        if (span.closest('button, nav, header, [class*="social-counts"], [class*="actor"], [class*="comment-box"]')) return false;
+        if (span.closest('button, nav, header, h2, [class*="social-counts"], [class*="actor"], [class*="comment-box"]')) return false;
         if (span.textContent.trim().length < 2) return false;
         return true;
       });
@@ -158,19 +206,17 @@
           if (containedSpans.length >= textSpans.length) break;
           container = container.parentElement;
         }
-
         if (container) {
           const text = cleanText(container.textContent);
           if (text.length > 20) return text;
         }
-
         const allText = textSpans.map(s => s.textContent.trim()).filter(Boolean).join('\n');
         const cleaned = cleanText(allText);
         if (cleaned.length > 20) return cleaned;
       }
     }
 
-    // Strategy 2: Known LinkedIn selectors
+    // Strategy 3: Known LinkedIn selectors (legacy)
     const textSelectors = [
       '.feed-shared-text .break-words',
       '.update-components-text .break-words',
@@ -180,7 +226,6 @@
       '.feed-shared-text',
       '.update-components-text'
     ];
-
     for (const sel of textSelectors) {
       const el = postEl.querySelector(sel);
       if (el) {
@@ -191,19 +236,16 @@
       }
     }
 
-    // Strategy 3: Broadest fallback
-    const skipSelectors = 'button, nav, header, [class*="social-counts"], [class*="actor"], [class*="comment"], footer';
+    // Strategy 4: Broadest fallback — find longest text block
+    const skipSelectors = 'button, nav, header, h2, footer';
     const candidates = postEl.querySelectorAll('div, p, span, article');
     let bestText = '';
-    let bestEl = null;
-
     for (const el of candidates) {
       if (el.closest(skipSelectors)) continue;
       if (el.querySelector('button[aria-label*="Like"], button[aria-label*="Comment"]')) continue;
       const text = cleanText(el.textContent);
       if (text.length > bestText.length && text.length > 50) {
         bestText = text;
-        bestEl = el;
       }
     }
     if (bestText) return bestText;
@@ -214,6 +256,31 @@
   function extractAuthor(postEl) {
     if (!postEl) return null;
 
+    // Strategy 1 (SDUI): Parse from overflow menu button aria-label
+    const menuBtn = postEl.querySelector('button[aria-label*="control menu for post by"]');
+    if (menuBtn) {
+      const label = menuBtn.getAttribute('aria-label');
+      const match = label.match(/post by (.+)/i);
+      if (match) return match[1].trim();
+    }
+
+    // Strategy 2 (SDUI): Parse from "Hide post by" button
+    const hideBtn = postEl.querySelector('button[aria-label*="Hide post by"]');
+    if (hideBtn) {
+      const label = hideBtn.getAttribute('aria-label');
+      const match = label.match(/post by (.+)/i);
+      if (match) return match[1].trim();
+    }
+
+    // Strategy 3 (SDUI): Parse from "Follow" button aria-label
+    const followBtn = postEl.querySelector('button[aria-label*="Follow "]');
+    if (followBtn) {
+      const label = followBtn.getAttribute('aria-label');
+      const match = label.match(/Follow (.+)/i);
+      if (match) return match[1].trim();
+    }
+
+    // Strategy 4 (Legacy)
     const authorSelectors = [
       '.update-components-actor__name .visually-hidden',
       '.update-components-actor__title .visually-hidden',
@@ -222,7 +289,6 @@
       '.update-components-actor__name',
       '.feed-shared-actor__name'
     ];
-
     for (const sel of authorSelectors) {
       const el = postEl.querySelector(sel);
       if (el && el.textContent.trim()) {
@@ -236,28 +302,25 @@
   function findCommentBox(postEl) {
     if (!postEl) return null;
 
-    // First try within the post element itself
-    const inPostSelectors = [
-      '.comments-comment-box [contenteditable="true"]',
-      '.comments-comment-texteditor [contenteditable="true"]',
+    const selectors = [
+      '[role="textbox"][contenteditable="true"]',
       '.ql-editor[contenteditable="true"]',
-      '[role="textbox"][contenteditable="true"]'
+      '.comments-comment-box [contenteditable="true"]',
+      '.comments-comment-texteditor [contenteditable="true"]'
     ];
 
-    for (const sel of inPostSelectors) {
+    for (const sel of selectors) {
       const el = postEl.querySelector(sel);
       if (el) return el;
     }
 
-    // Try sibling/nearby comment areas
     const parent = postEl.parentElement;
     if (parent) {
-      for (const sel of inPostSelectors) {
+      for (const sel of selectors) {
         const el = parent.querySelector(sel);
         if (el) return el;
       }
     }
-
     return null;
   }
 
@@ -265,20 +328,34 @@
   function openCommentBox(postEl) {
     if (!postEl) return false;
 
-    const commentBtnSelectors = [
+    // Strategy 1 (SDUI): Find button containing comment SVG icon
+    const commentSvg = postEl.querySelector('svg#comment-small');
+    if (commentSvg) {
+      const btn = commentSvg.closest('button');
+      if (btn) { btn.click(); return true; }
+    }
+
+    // Strategy 2 (SDUI): Find button with "Comment" text
+    const allBtns = postEl.querySelectorAll('button');
+    for (const btn of allBtns) {
+      const text = btn.textContent.trim();
+      if (text === 'Comment') {
+        btn.click();
+        return true;
+      }
+    }
+
+    // Strategy 3 (Legacy)
+    const legacySelectors = [
       'button[aria-label*="Comment"]',
       'button[aria-label*="comment"]',
       '.social-actions-button--comment',
       '.comment-button',
       'button.comments-comment-social-bar__comment-action'
     ];
-
-    for (const sel of commentBtnSelectors) {
+    for (const sel of legacySelectors) {
       const btn = postEl.querySelector(sel);
-      if (btn) {
-        btn.click();
-        return true;
-      }
+      if (btn) { btn.click(); return true; }
     }
     return false;
   }
@@ -286,41 +363,27 @@
   // ─── Insert text into a contenteditable element ───
   function insertText(editor, text) {
     editor.focus();
-
-    // Clear existing content
     editor.textContent = '';
     editor.dispatchEvent(new Event('input', { bubbles: true }));
-
-    // Use execCommand for better compatibility with LinkedIn's editor
     document.execCommand('insertText', false, text);
-
-    // Trigger input events so LinkedIn picks up the change
     editor.dispatchEvent(new Event('input', { bubbles: true }));
     editor.dispatchEvent(new Event('change', { bubbles: true }));
   }
 
   // ─── High-Reach Post Detector ───
-  // Use ONLY .occludable-update — these are LinkedIn's top-level feed items
-  // in the virtual scroll. Each feed item (original post, repost, "commented on")
-  // is wrapped in exactly one .occludable-update. This avoids matching nested
-  // elements that cause duplicate badges and wrong engagement data.
-  const POST_SELECTOR = '.occludable-update';
-
   const highReach = {
     enabled: true,
     thresholds: { reactions: 100, comments: 20, reposts: 10 },
     badgeCount: 0,
     maxBadges: 1000,
-    observer: null,
-    feedObserver: null
+    observer: null,      // IntersectionObserver (legacy)
+    feedObserver: null,   // MutationObserver for new posts
+    scanTimer: null       // Debounce timer for SDUI scanning
   };
 
   function parseEngagementCount(text) {
     if (!text) return 0;
     const cleaned = text.replace(/,/g, '').trim().toLowerCase();
-    // Match number with optional K/M suffix directly attached (e.g. "1.2k", "3m")
-    // The suffix must be immediately after the number — no spaces — to avoid
-    // misreading "298 reactions. More..." as "298M"
     const match = cleaned.match(/([\d.]+)(k|m)?\b/);
     if (!match) return 0;
     let num = parseFloat(match[1]);
@@ -330,71 +393,62 @@
   }
 
   // ─── Extract engagement (reactions, comments, reposts) ───
-  // Since we now only process .occludable-update elements (top-level feed items),
-  // we need to find the social counts bar that belongs to THIS feed item — not
-  // an embedded/shared post inside it.
-  //
-  // LinkedIn DOM structure for a top-level post:
-  //   .occludable-update
-  //     .feed-shared-update-v2  (may contain a nested .feed-shared-update-v2 for reshares)
-  //       .social-details-social-counts  ← EMBEDDED post's stats (if reshare)
-  //       .social-details-social-counts  ← FEED ITEM's own stats
-  //       .feed-shared-social-actions    ← Like/Comment/Repost/Send buttons
-  //
-  // Strategy: find the feed item's MAIN social action bar (the one with
-  // Like/Comment/Repost/Send), then get the social-counts bar closest to it.
-  // The main action bar is always the LAST .feed-shared-social-actions in DOM order.
-
+  // SDUI uses screen-reader spans (class e992b629 or similar) with text like "20 reactions"
+  // Also checks aria-hidden spans with count text as backup.
   function extractEngagement(postEl) {
     const engagement = { reactions: 0, comments: 0, reposts: 0 };
     if (!postEl) return engagement;
 
-    // Find the LAST social-details-social-activity container
-    // In LinkedIn's DOM, the feed item's own social details always come last
-    const allSocialDetails = postEl.querySelectorAll('.social-details-social-activity');
-    let scopeEl = allSocialDetails.length > 0
-      ? allSocialDetails[allSocialDetails.length - 1]
-      : null;
+    // Strategy 1 (SDUI): Screen-reader spans with count text
+    // These are spans with class "e992b629" containing text like "20 reactions", "8 comments"
+    // Also look for any span whose text matches the pattern "N reactions/comments/reposts"
+    const allSpans = postEl.querySelectorAll('span');
+    for (const span of allSpans) {
+      const text = span.textContent.trim().toLowerCase();
+      // Only match short text that looks like a count (avoid matching long post text)
+      if (text.length > 50) continue;
 
-    // If no .social-details-social-activity, try .social-details-social-counts directly
-    if (!scopeEl) {
-      const allCounts = postEl.querySelectorAll('.social-details-social-counts');
-      if (allCounts.length > 0) {
-        scopeEl = allCounts[allCounts.length - 1];
-      }
-    }
-
-    // Final fallback
-    if (!scopeEl) scopeEl = postEl;
-
-    // ─── Read reactions ───
-    const reactEl = scopeEl.querySelector('.social-details-social-counts__reactions-count');
-    if (reactEl && reactEl.textContent.trim()) {
-      engagement.reactions = parseEngagementCount(reactEl.textContent);
-    }
-    // Aria-label fallback
-    if (engagement.reactions === 0) {
-      const reactBtn = scopeEl.querySelector('button[aria-label*="reaction"], button[aria-label*="like"]');
-      if (reactBtn) {
-        engagement.reactions = parseEngagementCount(reactBtn.getAttribute('aria-label') || '');
-      }
-    }
-
-    // ─── Read comments & reposts ───
-    const countEls = scopeEl.querySelectorAll(
-      '.social-details-social-counts__item, .social-details-social-counts__comments'
-    );
-    for (const el of countEls) {
-      const text = el.textContent.trim().toLowerCase();
-      if (text.includes('comment') && engagement.comments === 0) {
+      if (text.match(/^\d[\d,.]*[km]?\s*reactions?$/) && engagement.reactions === 0) {
+        engagement.reactions = parseEngagementCount(text);
+      } else if (text.match(/^\d[\d,.]*[km]?\s*comments?$/) && engagement.comments === 0) {
         engagement.comments = parseEngagementCount(text);
-      }
-      if (text.includes('repost') && engagement.reposts === 0) {
+      } else if (text.match(/^\d[\d,.]*[km]?\s*reposts?$/) && engagement.reposts === 0) {
         engagement.reposts = parseEngagementCount(text);
       }
     }
 
-    // Aria-label fallback for comments/reposts
+    if (engagement.reactions > 0 || engagement.comments > 0 || engagement.reposts > 0) {
+      log('Engagement via SDUI spans:', engagement);
+      return engagement;
+    }
+
+    // Strategy 2 (Legacy): Old class-based selectors
+    const allSocialDetails = postEl.querySelectorAll('.social-details-social-activity');
+    let scopeEl = allSocialDetails.length > 0
+      ? allSocialDetails[allSocialDetails.length - 1]
+      : null;
+    if (!scopeEl) {
+      const allCounts = postEl.querySelectorAll('.social-details-social-counts');
+      if (allCounts.length > 0) scopeEl = allCounts[allCounts.length - 1];
+    }
+    if (!scopeEl) scopeEl = postEl;
+
+    const reactEl = scopeEl.querySelector('.social-details-social-counts__reactions-count');
+    if (reactEl && reactEl.textContent.trim()) {
+      engagement.reactions = parseEngagementCount(reactEl.textContent);
+    }
+    if (engagement.reactions === 0) {
+      const reactBtn = scopeEl.querySelector('button[aria-label*="reaction"], button[aria-label*="like"]');
+      if (reactBtn) engagement.reactions = parseEngagementCount(reactBtn.getAttribute('aria-label') || '');
+    }
+
+    const countEls = scopeEl.querySelectorAll('.social-details-social-counts__item, .social-details-social-counts__comments');
+    for (const el of countEls) {
+      const text = el.textContent.trim().toLowerCase();
+      if (text.includes('comment') && engagement.comments === 0) engagement.comments = parseEngagementCount(text);
+      if (text.includes('repost') && engagement.reposts === 0) engagement.reposts = parseEngagementCount(text);
+    }
+
     if (engagement.comments === 0 || engagement.reposts === 0) {
       const btns = scopeEl.querySelectorAll('button[aria-label]');
       for (const btn of btns) {
@@ -408,10 +462,19 @@
       }
     }
 
+    log('Engagement via legacy selectors:', engagement);
     return engagement;
   }
 
   function isPromotedPost(postEl) {
+    // Strategy 1 (SDUI): Check for "Promoted" or "Sponsored" text in short <p> elements
+    const paragraphs = postEl.querySelectorAll('p');
+    for (const p of paragraphs) {
+      const text = p.textContent.trim().toLowerCase();
+      if (text.length < 20 && (text === 'promoted' || text === 'sponsored')) return true;
+    }
+
+    // Strategy 2 (Legacy)
     const subDesc = postEl.querySelector('.feed-shared-actor__sub-description, .update-components-actor__sub-description');
     if (subDesc && subDesc.textContent.trim().toLowerCase().includes('promoted')) return true;
     return false;
@@ -444,7 +507,7 @@ Rules:
     'criticize': 'Point out flaws, gaps, or weaknesses in the argument. Be direct and specific about what is wrong or misleading. Stay professional but firm — no sugarcoating. Back up the critique with reasoning or evidence.'
   };
 
-  let activeWidget = null; // Track the currently open widget
+  let activeWidget = null;
 
   function closeActiveWidget() {
     if (activeWidget) {
@@ -467,7 +530,6 @@ Rules:
       return;
     }
 
-    // Read Ollama settings
     chrome.storage.local.get(['ollamaUrl', 'ollamaModel'], (settings) => {
       const ollamaUrl = (settings.ollamaUrl || 'http://localhost:11434').replace(/\/+$/, '');
       const ollamaModel = settings.ollamaModel || '';
@@ -477,7 +539,6 @@ Rules:
       let selectedStyle = 'insightful';
       let lastComment = '';
 
-      // No model warning
       if (!ollamaModel) {
         widget.innerHTML = `
           <div class="linkedcomment-widget-header">
@@ -538,13 +599,11 @@ Rules:
         });
       });
 
-      // Close button
       widget.querySelector('.linkedcomment-widget-close').addEventListener('click', (e) => {
         e.stopPropagation();
         closeActiveWidget();
       });
 
-      // Generate
       const genBtn = widget.querySelector('.linkedcomment-gen-btn');
       const loadingEl = widget.querySelector('.linkedcomment-loading');
       const errorEl = widget.querySelector('.linkedcomment-error');
@@ -552,7 +611,6 @@ Rules:
       const commentBox = widget.querySelector('.linkedcomment-comment-box');
 
       async function doGenerate() {
-        // Extract post text
         expandPost(postEl);
         await new Promise(r => setTimeout(r, 300));
         const postText = extractPostText(postEl);
@@ -593,7 +651,6 @@ Rules:
           let cleaned = result.trim().replace(/^["']|["']$/g, '');
           lastComment = cleaned;
 
-          // Format as HTML
           const escaped = cleaned.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
           const paragraphs = escaped.split(/\n{2,}/);
           let html = '';
@@ -677,20 +734,16 @@ Rules:
         closeActiveWidget();
       });
 
-      // Stop clicks inside widget from propagating to LinkedIn
       widget.addEventListener('click', (e) => e.stopPropagation());
-
       postEl.appendChild(widget);
       activeWidget = widget;
     });
   }
 
   function injectBadge(postEl, engagement) {
-    // Safety: don't duplicate badge
     if (postEl.querySelector(':scope > .linkedcomment-reach-badge')) return;
     if (highReach.badgeCount >= highReach.maxBadges) return;
 
-    // Ensure post is positioned for absolute badge placement
     const computed = window.getComputedStyle(postEl);
     if (computed.position === 'static') {
       postEl.style.position = 'relative';
@@ -699,20 +752,18 @@ Rules:
     const badge = document.createElement('div');
     badge.className = 'linkedcomment-reach-badge';
 
-    // Determine tier based on weighted engagement score
     const totalScore = engagement.reactions + (engagement.comments * 5) + (engagement.reposts * 3);
-    let tier = 'warm';        // light blue
+    let tier = 'warm';
     let tierLabel = 'Trending';
     if (totalScore >= 5000) {
-      tier = 'viral';         // bold navy/white
+      tier = 'viral';
       tierLabel = '🔥 Viral';
     } else if (totalScore >= 1000) {
-      tier = 'hot';           // deeper blue
+      tier = 'hot';
       tierLabel = '⚡ Hot';
     }
     badge.setAttribute('data-tier', tier);
 
-    // Build inline stats with bold numbers
     const parts = [];
     if (engagement.reactions > 0) parts.push(`<span class="linkedcomment-stat-num">${formatCount(engagement.reactions)}</span> reactions`);
     if (engagement.comments > 0) parts.push(`<span class="linkedcomment-stat-num">${formatCount(engagement.comments)}</span> comments`);
@@ -726,18 +777,14 @@ Rules:
       <span class="linkedcomment-badge-cta"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg> Reply</span>
     `;
 
-    // Click handler — open inline widget
     badge.addEventListener('click', (e) => {
       e.stopPropagation();
       e.preventDefault();
-
-      // Toggle: if widget already open on this post, close it
       const existingWidget = postEl.querySelector('.linkedcomment-widget');
       if (existingWidget) {
         closeActiveWidget();
         return;
       }
-
       createWidget(postEl);
     });
 
@@ -745,93 +792,95 @@ Rules:
     highReach.badgeCount++;
   }
 
-  function processPost(scrollEl) {
-    // scrollEl is .occludable-update (the scroll wrapper).
-    // The ACTUAL post is the first .feed-shared-update-v2 inside it.
-    // Multiple .occludable-update wrappers can share the same inner post,
-    // so we dedup on the inner post element, not the wrapper.
-    const postEl = scrollEl.querySelector('.feed-shared-update-v2');
-    if (!postEl) return;
-
-    // Already processed — this is the key dedup
+  function processPost(postEl) {
+    // Dedup: mark processed using a data attribute
     if (postEl.hasAttribute('data-linkedcomment-processed')) return;
     postEl.setAttribute('data-linkedcomment-processed', 'true');
 
-    // Skip promoted posts
     if (isPromotedPost(postEl)) return;
 
     const engagement = extractEngagement(postEl);
     const t = highReach.thresholds;
 
-    // Check if any metric exceeds its threshold
+    log('Post engagement:', engagement, 'Thresholds:', t);
+
     if (engagement.reactions >= t.reactions || engagement.comments >= t.comments || engagement.reposts >= t.reposts) {
       injectBadge(postEl, engagement);
     }
   }
 
-  function startDetector() {
-    if (highReach.observer) return; // already running
+  // ─── Debounced scan for new posts ───
+  function scheduleScan() {
+    if (highReach.scanTimer) return;
+    highReach.scanTimer = requestAnimationFrame(() => {
+      highReach.scanTimer = null;
+      scanFeedPosts();
+    });
+  }
 
-    // IntersectionObserver — process posts as they enter viewport
-    highReach.observer = new IntersectionObserver((entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting && isTopLevelPost(entry.target)) {
-          processPost(entry.target);
+  function scanFeedPosts() {
+    const posts = findAllFeedPosts();
+    let processed = 0;
+    for (const post of posts) {
+      if (!post.hasAttribute('data-linkedcomment-processed')) {
+        // Only process posts visible in or near viewport
+        const rect = post.getBoundingClientRect();
+        if (rect.bottom >= -500 && rect.top <= window.innerHeight + 500) {
+          processPost(post);
+          processed++;
         }
       }
-    }, { threshold: 0.3 });
-
-    // Only observe TOP-LEVEL .occludable-update — skip any nested inside another
-    function isTopLevelPost(el) {
-      return !el.parentElement?.closest(POST_SELECTOR);
     }
+    if (processed > 0) log(`Processed ${processed} new posts`);
+  }
 
-    // Observe all existing top-level posts
-    document.querySelectorAll(POST_SELECTOR).forEach(post => {
-      if (isTopLevelPost(post)) highReach.observer.observe(post);
-    });
+  function startDetector() {
+    if (highReach.feedObserver) return; // already running
+
+    log('Starting feed detector');
+
+    // Initial scan
+    scanFeedPosts();
+
+    // Also scan on scroll (throttled)
+    let scrollTimer = null;
+    window.addEventListener('scroll', () => {
+      if (scrollTimer) return;
+      scrollTimer = setTimeout(() => {
+        scrollTimer = null;
+        scanFeedPosts();
+      }, 500);
+    }, { passive: true });
 
     // MutationObserver — watch for new posts added to the feed
-    highReach.feedObserver = new MutationObserver((mutations) => {
-      for (const mutation of mutations) {
-        for (const node of mutation.addedNodes) {
-          if (node.nodeType !== 1) continue;
-          if (node.matches?.(POST_SELECTOR) && isTopLevelPost(node)) {
-            highReach.observer.observe(node);
-          }
-          node.querySelectorAll?.(POST_SELECTOR)?.forEach(post => {
-            if (isTopLevelPost(post)) highReach.observer.observe(post);
-          });
-        }
-      }
+    highReach.feedObserver = new MutationObserver(() => {
+      scheduleScan();
     });
 
     highReach.feedObserver.observe(document.body, { childList: true, subtree: true });
   }
 
   function stopDetector() {
-    if (highReach.observer) {
-      highReach.observer.disconnect();
-      highReach.observer = null;
-    }
     if (highReach.feedObserver) {
       highReach.feedObserver.disconnect();
       highReach.feedObserver = null;
     }
-    // Remove all badges and processed markers
+    if (highReach.scanTimer) {
+      cancelAnimationFrame(highReach.scanTimer);
+      highReach.scanTimer = null;
+    }
     document.querySelectorAll('.linkedcomment-reach-badge').forEach(b => b.remove());
     document.querySelectorAll('[data-linkedcomment-processed]').forEach(el => el.removeAttribute('data-linkedcomment-processed'));
     highReach.badgeCount = 0;
+    log('Detector stopped');
   }
 
-  // Initialize detector and dark mode from stored settings
+  // Initialize
   if (!isExtensionValid()) return;
   chrome.storage.local.get(['highReachEnabled', 'highReachThresholds', 'darkMode'], (data) => {
-    // Dark mode
     if (data.darkMode) darkModeSetting = data.darkMode;
     applyDarkMode();
 
-    // High-reach detector
     if (data.highReachEnabled === false) {
       highReach.enabled = false;
     } else {
@@ -841,12 +890,11 @@ Rules:
       highReach.thresholds = data.highReachThresholds;
     }
     if (highReach.enabled) {
-      // Small delay to let LinkedIn finish rendering
       setTimeout(startDetector, 2000);
     }
   });
 
-  // React to settings changes in real time
+  // React to settings changes
   chrome.storage.onChanged.addListener((changes) => {
     if (changes.darkMode) {
       darkModeSetting = changes.darkMode.newValue || 'auto';
@@ -854,15 +902,11 @@ Rules:
     }
     if (changes.highReachEnabled) {
       highReach.enabled = changes.highReachEnabled.newValue !== false;
-      if (highReach.enabled) {
-        startDetector();
-      } else {
-        stopDetector();
-      }
+      if (highReach.enabled) startDetector();
+      else stopDetector();
     }
     if (changes.highReachThresholds && changes.highReachThresholds.newValue) {
       highReach.thresholds = changes.highReachThresholds.newValue;
-      // Re-scan: stop and restart to re-evaluate with new thresholds
       if (highReach.enabled) {
         stopDetector();
         startDetector();
@@ -872,7 +916,6 @@ Rules:
 
   // ─── Message Handler ───
   chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
-    // High-reach toggle from popup
     if (msg.action === 'toggleHighReach') {
       highReach.enabled = msg.enabled;
       if (msg.enabled) startDetector();
@@ -905,24 +948,21 @@ Rules:
         return;
       }
 
-      // Get text before expanding
       const textBefore = extractPostText(post) || '';
 
-      // Check if there's even a "see more" button — if not, post is already full
-      const hasSeeMore = post.querySelector(
-        'button.feed-shared-inline-show-more-text, button[aria-label*="see more" i], .feed-shared-text-view__see-more-less-toggle, .see-more'
-      ) || Array.from(post.querySelectorAll('button, span[role="button"]')).some(
-        btn => /^(…|\.\.\.)?see more$/i.test(btn.textContent.trim())
-      );
+      // Check for "see more" button
+      const hasSeeMore = post.querySelector('[data-testid="expandable-text-button"]') ||
+        post.querySelector('button.feed-shared-inline-show-more-text, button[aria-label*="see more" i], .feed-shared-text-view__see-more-less-toggle, .see-more') ||
+        Array.from(post.querySelectorAll('button, span[role="button"]')).some(
+          btn => /^(…|\.\.\.)?see more$/i.test(btn.textContent.trim()) || btn.textContent.trim() === '… more' || btn.textContent.trim() === '…more'
+        );
 
       if (!hasSeeMore) {
-        // Post is already fully expanded
         window.__linkedcomment_lastPost = post;
         sendResponse({ text: textBefore, author: extractAuthor(post) });
         return;
       }
 
-      // Use MutationObserver to detect when LinkedIn finishes expanding
       let resolved = false;
       const observer = new MutationObserver(() => {
         if (resolved) return;
@@ -936,11 +976,8 @@ Rules:
       });
 
       observer.observe(post, { childList: true, subtree: true, characterData: true, attributes: true });
-
-      // Click "see more"
       expandPost(post);
 
-      // Safety timeout — if observer doesn't fire within 3s, return best we have
       setTimeout(() => {
         if (resolved) return;
         resolved = true;
@@ -950,7 +987,7 @@ Rules:
         sendResponse({ text: text || textBefore, author: extractAuthor(post) });
       }, 3000);
 
-      return true; // async response
+      return true;
     }
 
     if (msg.action === 'insertComment') {
@@ -959,10 +996,8 @@ Rules:
       let commentBox = findCommentBox(post);
 
       if (!commentBox) {
-        // Try opening the comment box first
         const opened = openCommentBox(post);
         if (opened) {
-          // Wait for comment box to appear
           setTimeout(() => {
             commentBox = findCommentBox(post);
             if (commentBox) {
@@ -973,7 +1008,7 @@ Rules:
               sendResponse({ ok: false, error: 'Comment box did not open. Click "Comment" manually first.' });
             }
           }, 800);
-          return true; // async response
+          return true;
         }
         sendResponse({ ok: false, error: 'No comment box found. Click "Comment" on the post first.' });
         return;

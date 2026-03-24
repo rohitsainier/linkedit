@@ -9,11 +9,12 @@ LinkedComment is a Chrome extension (Manifest V3) that detects trending LinkedIn
 ### Content Script (`content.js`)
 The main file — runs on `*://*.linkedin.com/*`. Contains:
 
-- **Post detection**: `IntersectionObserver` watches `.occludable-update` elements (LinkedIn's virtual scroll wrappers). Only top-level posts are observed — nested/embedded posts are skipped via `isTopLevelPost()`.
-- **Engagement extraction**: `extractEngagement()` reads reactions, comments, reposts from the LAST `.social-details-social-activity` container in a post (outermost = feed item's own stats, not embedded post's).
-- **Badge injection**: `injectBadge()` creates color-coded trending badges. Dedup via `data-linkedcomment-processed` attribute on the inner `.feed-shared-update-v2` element.
+- **Post detection**: `findAllFeedPosts()` finds posts by looking for `<h2>` elements containing "Feed post" screen-reader text (SDUI strategy), with fallbacks to legacy `.occludable-update` and `[data-urn]` selectors. A `MutationObserver` + scroll listener triggers debounced rescans as new posts load.
+- **Engagement extraction**: `extractEngagement()` reads reactions, comments, reposts from screen-reader `<span>` elements matching patterns like "20 reactions", "8 comments" (SDUI), with fallback to legacy `.social-details-social-activity` selectors.
+- **Badge injection**: `injectBadge()` creates color-coded trending badges. Dedup via `data-linkedcomment-processed` attribute on the post container.
 - **Inline widget**: `createWidget()` builds a full comment generator UI (style pills, angle input, generate button, output with copy/insert/redo). Communicates with background.js for Ollama API calls.
-- **Post text extraction**: 3-strategy approach using `textContent` (not `innerText`) to bypass CSS truncation. Handles "see more" expansion via `MutationObserver` with 3s safety timeout.
+- **Post text extraction**: Multi-strategy approach: primary uses `[data-testid="expandable-text-box"]` (SDUI), falls back to `span[dir="ltr"]` collection, legacy class selectors, and broadest text block search. Handles "see more" expansion via `[data-testid="expandable-text-button"]` + `MutationObserver` with 3s safety timeout.
+- **Debug logging**: All key operations log to console with `[LinkedComment]` prefix when `DEBUG=true`.
 
 ### Background Service Worker (`background.js`)
 - `ollamaFetch`: GET proxy for Ollama API (model listing)
@@ -34,15 +35,19 @@ Two `declarativeNetRequest` rules removing Origin header for localhost:11434 and
 
 ## Key Design Decisions
 
-1. **`.occludable-update` as scroll observer target, `.feed-shared-update-v2` as dedup target**: LinkedIn splits feed items across multiple `.occludable-update` wrappers but shares the inner `.feed-shared-update-v2`. Deduping on the inner element prevents double badges.
+1. **SDUI-first selectors with legacy fallbacks**: LinkedIn migrated to Server-Driven UI (SDUI) in ~2025, replacing semantic class names with hashed/obfuscated ones. All selectors now use stable attributes first (`data-testid`, `aria-label`, SVG `id`, text content matching) and fall back to legacy class names for older LinkedIn versions.
 
-2. **Last social bar wins**: For engagement extraction, the LAST `.social-details-social-activity` in a post is the feed item's own stats. Embedded/reshared post stats appear earlier in DOM order.
+2. **`<h2>` with "Feed post" text as post container**: In SDUI, each feed post is wrapped in a container whose first child is an `<h2>` with screen-reader text "Feed post". This is the primary post detection strategy.
 
-3. **`textContent` over `innerText`**: LinkedIn uses CSS `text-overflow`, `max-height`, `overflow:hidden` to visually truncate posts. `innerText` respects these CSS rules and returns truncated text. `textContent` gets all text regardless.
+3. **Screen-reader spans for engagement counts**: SDUI renders counts in `<span>` elements with text like "20 reactions", "8 comments". These are matched via regex patterns.
 
-4. **`document.execCommand('insertText')` for comment insertion**: LinkedIn's contenteditable comment box requires this legacy API for proper event dispatching. Direct `textContent` assignment doesn't trigger LinkedIn's internal state updates.
+4. **`textContent` over `innerText`**: LinkedIn uses CSS `text-overflow`, `max-height`, `overflow:hidden` to visually truncate posts. `innerText` respects these CSS rules and returns truncated text. `textContent` gets all text regardless.
 
-5. **`!important` on all widget styles**: LinkedIn's CSS cascade is aggressive. Without `!important`, injected elements inherit LinkedIn's text colors (often white on dark mode), making text invisible.
+5. **`document.execCommand('insertText')` for comment insertion**: LinkedIn's contenteditable comment box requires this legacy API for proper event dispatching. Direct `textContent` assignment doesn't trigger LinkedIn's internal state updates.
+
+6. **`!important` on all widget styles**: LinkedIn's CSS cascade is aggressive. Without `!important`, injected elements inherit LinkedIn's text colors (often white on dark mode), making text invisible.
+
+7. **Debounced MutationObserver + scroll scanning**: Instead of IntersectionObserver on specific selectors, uses a MutationObserver on `document.body` that triggers debounced rescans via `requestAnimationFrame`, plus a throttled scroll listener. This handles SDUI's dynamic rendering.
 
 ## Common Issues
 
