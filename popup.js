@@ -14,7 +14,6 @@ function applyPopupDarkMode(mode) {
   if (mode === 'dark') {
     document.body.classList.add('dark');
   } else if (mode === 'auto') {
-    // Use system preference for popup
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     document.body.classList.toggle('dark', prefersDark);
   } else {
@@ -22,21 +21,45 @@ function applyPopupDarkMode(mode) {
   }
 }
 
+// ─── Provider Switching ───
+function showProviderFields(provider) {
+  ['ollama', 'openai', 'gemini', 'claude'].forEach(p => {
+    const el = document.getElementById(`provider-${p}`);
+    if (el) el.style.display = p === provider ? 'block' : 'none';
+  });
+}
+
 // ─── Settings ───
 function loadSettings() {
   return new Promise(resolve => {
-    chrome.storage.local.get(['ollamaUrl', 'ollamaModel', 'highReachEnabled', 'highReachThresholds', 'darkMode'], (data) => {
+    chrome.storage.local.get([
+      'ollamaUrl', 'ollamaModel', 'highReachEnabled', 'highReachThresholds', 'darkMode',
+      'aiProvider', 'openaiApiKey', 'openaiModel', 'geminiApiKey', 'geminiModel', 'claudeApiKey', 'claudeModel'
+    ], (data) => {
       if (data.ollamaUrl) ollamaSettings.url = data.ollamaUrl;
       if (data.ollamaModel) ollamaSettings.model = data.ollamaModel;
       document.getElementById('ollamaUrl').value = ollamaSettings.url;
 
-      // Dark mode setting — apply to popup UI immediately
+      // AI Provider
+      const provider = data.aiProvider || 'ollama';
+      document.getElementById('aiProvider').value = provider;
+      showProviderFields(provider);
+
+      // Cloud provider settings
+      if (data.openaiApiKey) document.getElementById('openaiApiKey').value = data.openaiApiKey;
+      if (data.openaiModel) document.getElementById('openaiModel').value = data.openaiModel;
+      if (data.geminiApiKey) document.getElementById('geminiApiKey').value = data.geminiApiKey;
+      if (data.geminiModel) document.getElementById('geminiModel').value = data.geminiModel;
+      if (data.claudeApiKey) document.getElementById('claudeApiKey').value = data.claudeApiKey;
+      if (data.claudeModel) document.getElementById('claudeModel').value = data.claudeModel;
+
+      // Dark mode
       const darkModeSelect = document.getElementById('darkModeSelect');
       const savedDarkMode = data.darkMode || 'auto';
       if (darkModeSelect) darkModeSelect.value = savedDarkMode;
       applyPopupDarkMode(savedDarkMode);
 
-      // High-reach detector settings
+      // High-reach detector
       const toggle = document.getElementById('highReachToggle');
       if (toggle) toggle.checked = data.highReachEnabled !== false;
 
@@ -58,10 +81,9 @@ function saveSettings() {
   ollamaSettings.url = url;
   ollamaSettings.model = model;
 
-  // Dark mode setting
+  const aiProvider = document.getElementById('aiProvider').value;
   const darkMode = document.getElementById('darkModeSelect')?.value || 'auto';
 
-  // High-reach settings
   const highReachEnabled = document.getElementById('highReachToggle')?.checked ?? true;
   const highReachThresholds = {
     reactions: parseInt(document.getElementById('threshReactions')?.value ?? 100),
@@ -72,12 +94,19 @@ function saveSettings() {
   chrome.storage.local.set({
     ollamaUrl: url,
     ollamaModel: model,
+    aiProvider,
+    openaiApiKey: document.getElementById('openaiApiKey').value.trim(),
+    openaiModel: document.getElementById('openaiModel').value,
+    geminiApiKey: document.getElementById('geminiApiKey').value.trim(),
+    geminiModel: document.getElementById('geminiModel').value,
+    claudeApiKey: document.getElementById('claudeApiKey').value.trim(),
+    claudeModel: document.getElementById('claudeModel').value,
     darkMode,
     highReachEnabled,
     highReachThresholds
   });
 
-  // Notify content script about changes
+  // Notify content script
   chrome.tabs.query({ active: true, currentWindow: true }, ([tab]) => {
     if (tab && tab.url && tab.url.includes('linkedin.com')) {
       chrome.tabs.sendMessage(tab.id, { action: 'toggleHighReach', enabled: highReachEnabled });
@@ -155,10 +184,34 @@ async function fetchModels(url) {
 document.getElementById('fetchModelsBtn').addEventListener('click', () => fetchModels());
 document.getElementById('saveSettingsBtn').addEventListener('click', saveSettings);
 
-// Live-preview dark mode when dropdown changes (before save)
+// Provider dropdown switching
+document.getElementById('aiProvider').addEventListener('change', (e) => {
+  showProviderFields(e.target.value);
+});
+
+// API key show/hide toggles
+document.querySelectorAll('.s-toggle-key').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const input = document.getElementById(btn.dataset.target);
+    if (input.type === 'password') {
+      input.type = 'text';
+      btn.textContent = 'Hide';
+    } else {
+      input.type = 'password';
+      btn.textContent = 'Show';
+    }
+  });
+});
+
+// Live-preview dark mode
 document.getElementById('darkModeSelect').addEventListener('change', (e) => {
   applyPopupDarkMode(e.target.value);
 });
 
 // ─── Init ───
-loadSettings().then(() => fetchModels(ollamaSettings.url));
+loadSettings().then(() => {
+  const provider = document.getElementById('aiProvider').value;
+  if (provider === 'ollama') {
+    fetchModels(ollamaSettings.url);
+  }
+});

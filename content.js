@@ -554,23 +554,36 @@ Rules:
       return;
     }
 
-    chrome.storage.local.get(['ollamaUrl', 'ollamaModel'], (settings) => {
+    chrome.storage.local.get(['aiProvider', 'ollamaUrl', 'ollamaModel', 'openaiApiKey', 'openaiModel', 'geminiApiKey', 'geminiModel', 'claudeApiKey', 'claudeModel'], (settings) => {
+      const provider = settings.aiProvider || 'ollama';
       const ollamaUrl = (settings.ollamaUrl || 'http://localhost:11434').replace(/\/+$/, '');
-      const ollamaModel = settings.ollamaModel || '';
+
+      const modelKeys = { ollama: 'ollamaModel', openai: 'openaiModel', gemini: 'geminiModel', claude: 'claudeModel' };
+      const apiKeyKeys = { openai: 'openaiApiKey', gemini: 'geminiApiKey', claude: 'claudeApiKey' };
+      const activeModel = settings[modelKeys[provider]] || '';
+      const activeApiKey = provider !== 'ollama' ? (settings[apiKeyKeys[provider]] || '') : '';
+
+      const providerConfig = { provider, model: activeModel, apiKey: activeApiKey, ollamaUrl };
 
       const widget = document.createElement('div');
       widget.className = 'linkedcomment-widget';
       let selectedStyle = 'insightful';
       let lastComment = '';
 
-      if (!ollamaModel) {
+      // Check if provider is properly configured
+      const needsApiKey = provider !== 'ollama' && !activeApiKey;
+      const needsModel = !activeModel;
+
+      if (needsApiKey || needsModel) {
+        const providerNames = { ollama: 'Ollama', openai: 'OpenAI', gemini: 'Google Gemini', claude: 'Anthropic Claude' };
+        const issue = needsApiKey ? `No API key set for ${providerNames[provider]}` : `No model selected for ${providerNames[provider]}`;
         widget.innerHTML = `
           <div class="linkedcomment-widget-header">
             <span><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg> LinkedComment</span>
             <button class="linkedcomment-widget-close"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
           </div>
           <div class="linkedcomment-widget-body">
-            <div class="linkedcomment-no-model">No model configured. Click the LinkedComment extension icon to set up Ollama.</div>
+            <div class="linkedcomment-no-model">${issue}. Click the LinkedComment extension icon to configure.</div>
           </div>
         `;
         widget.querySelector('.linkedcomment-widget-close').addEventListener('click', (e) => {
@@ -656,14 +669,13 @@ Rules:
         try {
           const result = await new Promise((resolve, reject) => {
             chrome.runtime.sendMessage({
-              action: 'ollamaStream',
-              url: `${ollamaUrl}/api/generate`,
-              body: JSON.stringify({
-                model: ollamaModel,
-                prompt: prompt,
-                system: SYSTEM_PROMPT,
-                stream: true
-              })
+              action: 'aiGenerate',
+              provider: providerConfig.provider,
+              model: providerConfig.model,
+              apiKey: providerConfig.apiKey,
+              ollamaUrl: providerConfig.ollamaUrl,
+              systemPrompt: SYSTEM_PROMPT,
+              userPrompt: prompt
             }, (response) => {
               if (chrome.runtime.lastError) reject(new Error(chrome.runtime.lastError.message));
               else if (!response || !response.ok) reject(new Error(response?.error || 'Generation failed'));
@@ -693,9 +705,7 @@ Rules:
         } catch (err) {
           loadingEl.classList.remove('visible');
           let msg = err.message;
-          if (msg.includes('Failed to fetch') || msg.includes('NetworkError')) {
-            msg = 'Cannot connect to Ollama. Is it running?';
-          }
+          // Error messages are already provider-aware from background.js
           errorEl.textContent = msg;
           errorEl.classList.add('visible');
         } finally {
