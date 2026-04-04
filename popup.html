@@ -220,6 +220,30 @@
     background: #e8e8e8;
     color: #1d2226;
   }
+
+  /* Donate button */
+  .s-donate-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 20px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: var(--f);
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s;
+    box-shadow: 0 2px 8px rgba(238, 90, 36, 0.3);
+  }
+  .s-donate-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(238, 90, 36, 0.4);
+  }
+  .s-donate-btn svg { stroke: #fff; }
 </style>
 </head>
 <body>
@@ -357,6 +381,19 @@
   </div>
 
   <button class="s-save" id="saveSettingsBtn">Save Settings</button>
+</div>
+
+<!-- SUPPORT -->
+<div class="section" style="text-align: center; padding: 16px;">
+  <div style="font-size: 11px; font-weight: 700; color: var(--t2); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 8px;">Support this project</div>
+  <div style="font-size: 12px; color: var(--t2); line-height: 1.5; margin-bottom: 10px;">
+    If LinkedComment helps you grow on LinkedIn, consider buying me a coffee!
+  </div>
+  <a href="https://paypal.me/rohitsainier" target="_blank" rel="noopener" class="s-donate-btn">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+    Donate via PayPal
+  </a>
+  <div style="font-size: 10px; color: var(--t3); margin-top: 8px;">v2.1.0 — Made with care</div>
 </div>
 
 <div class="toast" id="toast"></div>

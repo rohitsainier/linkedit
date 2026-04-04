@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "LinkedComment — AI Comment Generator for LinkedIn",
-  "version": "2.0.0",
-  "description": "Generate thoughtful, engaging LinkedIn comments using your local AI. Grab any post, pick a style, get a perfect comment in seconds.",
+  "version": "2.1.0",
+  "description": "AI-powered LinkedIn comments with OpenAI, Gemini, Claude, or Ollama. Detects trending posts automatically.",
   "permissions": ["activeTab", "clipboardWrite", "clipboardRead", "storage", "declarativeNetRequest"],
   "host_permissions": ["http://localhost:11434/*", "http://127.0.0.1:11434/*", "http://localhost/*", "http://127.0.0.1/*", "https://api.openai.com/*", "https://generativelanguage.googleapis.com/*", "https://api.anthropic.com/*"],
   "action": {
