@@ -22,30 +22,30 @@
   transform: translateY(0);
 }
 
-/* ─── High-Reach Badge (LinkedIn Blue Theme) ─── */
+/* ─── High-Reach Badge ─── */
 .linkedcomment-reach-badge {
   position: absolute;
   top: 8px;
   right: 8px;
   z-index: 100;
-  background: linear-gradient(135deg, #e8f3ff 0%, #d0e8ff 100%);
-  border: 1px solid #91c8f6;
+  background: linear-gradient(135deg, #e0faf4 0%, #c2f5e9 100%);
+  border: 1px solid #6ee7c0;
   border-radius: 20px;
   padding: 5px 12px;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   font-size: 11px;
   font-weight: 700;
-  color: #0a66c2;
+  color: #0d9373;
   cursor: pointer;
   display: flex;
   align-items: center;
   gap: 5px;
-  box-shadow: 0 2px 8px rgba(10, 102, 194, 0.15);
+  box-shadow: 0 2px 8px rgba(45, 200, 200, 0.15);
   transition: all 0.2s ease;
   animation: linkedcomment-badge-in 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 .linkedcomment-reach-badge:hover {
-  box-shadow: 0 4px 16px rgba(10, 102, 194, 0.3);
+  box-shadow: 0 4px 16px rgba(45, 200, 200, 0.3);
   transform: translateY(-1px);
 }
 
@@ -63,7 +63,7 @@
 .linkedcomment-reach-badge .linkedcomment-badge-cta {
   font-size: 10px;
   font-weight: 700;
-  background: rgba(10, 102, 194, 0.1);
+  background: rgba(13, 147, 115, 0.1);
   padding: 2px 8px;
   border-radius: 10px;
   white-space: nowrap;
@@ -77,14 +77,14 @@
   height: 11px !important;
 }
 .linkedcomment-reach-badge:hover .linkedcomment-badge-cta {
-  background: rgba(10, 102, 194, 0.2);
+  background: rgba(13, 147, 115, 0.2);
 }
 
 /* Inline stats with bold numbers */
 .linkedcomment-reach-badge .linkedcomment-badge-stats {
   font-size: 10px;
   font-weight: 500;
-  color: #0a66c2;
+  color: #0d9373;
   opacity: 0.85;
   white-space: nowrap;
 }
@@ -95,39 +95,42 @@
   -webkit-text-fill-color: currentColor !important;
 }
 
-/* Tier: Hot (deeper LinkedIn blue) */
+/* Tier: Hot (orange) */
 .linkedcomment-reach-badge[data-tier="hot"] {
-  background: linear-gradient(135deg, #d0e8ff 0%, #a8d4ff 100%);
-  border-color: #70b8f8;
-  color: #0a66c2;
-  box-shadow: 0 2px 8px rgba(10, 102, 194, 0.2);
+  background: linear-gradient(135deg, #fff3e0 0%, #ffe0b2 100%);
+  border-color: #ffb74d;
+  color: #e65100;
+  box-shadow: 0 2px 8px rgba(255, 122, 0, 0.2);
 }
 .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-badge-cta {
-  background: rgba(10, 102, 194, 0.12);
+  background: rgba(230, 81, 0, 0.1);
 }
 .linkedcomment-reach-badge[data-tier="hot"]:hover .linkedcomment-badge-cta {
-  background: rgba(10, 102, 194, 0.22);
+  background: rgba(230, 81, 0, 0.2);
 }
 .linkedcomment-reach-badge[data-tier="hot"] svg {
-  stroke: #0a66c2;
+  stroke: #e65100;
+}
+.linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-badge-stats {
+  color: #e65100;
 }
 
-/* Tier: Viral (bold LinkedIn navy) */
+/* Tier: Viral (pink) */
 .linkedcomment-reach-badge[data-tier="viral"] {
-  background: linear-gradient(135deg, #0a66c2 0%, #004182 100%);
-  border-color: #004182;
+  background: linear-gradient(135deg, #f91880 0%, #e01672 100%);
+  border-color: #e01672;
   color: #ffffff;
-  box-shadow: 0 2px 10px rgba(0, 65, 130, 0.3);
+  box-shadow: 0 2px 10px rgba(249, 24, 128, 0.3);
 }
 .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-cta {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.2);
   color: #ffffff;
 }
 .linkedcomment-reach-badge[data-tier="viral"]:hover .linkedcomment-badge-cta {
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.3);
 }
 .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-stats {
-  color: rgba(255, 255, 255, 0.85);
+  color: rgba(255, 255, 255, 0.9);
 }
 .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-stat-num {
   -webkit-text-fill-color: #ffffff !important;
@@ -136,7 +139,7 @@
   stroke: #ffffff;
 }
 .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-dot {
-  background: #ffffff;
+  background: rgba(255, 255, 255, 0.6);
 }
 
 .linkedcomment-reach-badge svg {
@@ -441,84 +444,87 @@
    Auto-detected from LinkedIn's theme or manual toggle
    ══════════════════════════════════════════════════════ */
 
-/* ─── Dark Badge ─── */
+/* ─── Dark Badge (Trending - Teal) ─── */
 .linkedcomment-dark .linkedcomment-reach-badge {
-  background: linear-gradient(135deg, #1b3a5c 0%, #1a3352 100%) !important;
-  border-color: #2d6db5 !important;
-  color: #70b5f9 !important;
+  background: #1a3332 !important;
+  border-color: #2a6b65 !important;
+  color: #5eead4 !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4) !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge:hover {
   box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5) !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge svg {
-  stroke: #70b5f9 !important;
+  stroke: #5eead4 !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge .linkedcomment-badge-cta {
-  background: rgba(112, 181, 249, 0.15) !important;
-  color: #70b5f9 !important;
+  background: rgba(94, 234, 212, 0.15) !important;
+  color: #5eead4 !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge:hover .linkedcomment-badge-cta {
-  background: rgba(112, 181, 249, 0.25) !important;
+  background: rgba(94, 234, 212, 0.25) !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge .linkedcomment-badge-dot {
-  background: #70b5f9 !important;
+  background: #5eead4 !important;
 }
 .linkedcomment-dark .linkedcomment-stat-num {
-  -webkit-text-fill-color: #70b5f9 !important;
+  -webkit-text-fill-color: #5eead4 !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge .linkedcomment-badge-stats {
-  color: #70b5f9 !important;
+  color: rgba(94, 234, 212, 0.8) !important;
 }
 
-/* Dark Hot tier */
+/* Dark Hot tier (Orange) */
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"] {
-  background: linear-gradient(135deg, #1d4473 0%, #1a3d6b 100%) !important;
-  border-color: #3b82d9 !important;
-  color: #93c5fd !important;
+  background: #3d2a14 !important;
+  border-color: #a06520 !important;
+  color: #ffb74d !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"] svg {
-  stroke: #93c5fd !important;
+  stroke: #ffb74d !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-badge-cta {
-  background: rgba(147, 197, 253, 0.15) !important;
-  color: #93c5fd !important;
+  background: rgba(255, 183, 77, 0.15) !important;
+  color: #ffb74d !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"]:hover .linkedcomment-badge-cta {
-  background: rgba(147, 197, 253, 0.25) !important;
+  background: rgba(255, 183, 77, 0.25) !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-badge-stats {
-  color: #93c5fd !important;
+  color: rgba(255, 183, 77, 0.8) !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-stat-num {
-  -webkit-text-fill-color: #93c5fd !important;
+  -webkit-text-fill-color: #ffb74d !important;
+}
+.linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-badge-dot {
+  background: #ffb74d !important;
 }
 
-/* Dark Viral tier */
+/* Dark Viral tier (Pink) */
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"] {
-  background: linear-gradient(135deg, #70b5f9 0%, #3b82d9 100%) !important;
-  border-color: #70b5f9 !important;
+  background: linear-gradient(135deg, #f91880 0%, #e01672 100%) !important;
+  border: none !important;
   color: #ffffff !important;
-  box-shadow: 0 2px 12px rgba(112, 181, 249, 0.3) !important;
+  box-shadow: 0 2px 12px rgba(249, 24, 128, 0.3) !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"] svg {
   stroke: #ffffff !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-cta {
-  background: rgba(255, 255, 255, 0.15) !important;
+  background: rgba(255, 255, 255, 0.2) !important;
   color: #ffffff !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"]:hover .linkedcomment-badge-cta {
-  background: rgba(255, 255, 255, 0.25) !important;
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-stats {
-  color: rgba(255, 255, 255, 0.85) !important;
+  color: rgba(255, 255, 255, 0.9) !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-stat-num {
   -webkit-text-fill-color: #ffffff !important;
 }
 .linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-dot {
-  background: #ffffff !important;
+  background: rgba(255, 255, 255, 0.6) !important;
 }
 
 /* ─── Dark Widget ─── */
@@ -645,4 +651,375 @@
 .linkedcomment-dark #linkedcomment-toast {
   background: #e8e8e8 !important;
   color: #1d2226 !important;
+}
+
+/* ══════════════════════════════════════════════════════
+   X.COM (TWITTER) THEME
+   Applied via .linkedcomment-xcom on <html>
+   Uses X.com's signature blue (#1d9bf0) accent
+   ══════════════════════════════════════════════════════ */
+
+/* ─── X.com Badge (Trending - Teal pill) ─── */
+.linkedcomment-xcom .linkedcomment-reach-badge {
+  background: #2dc8c8 !important;
+  border: none !important;
+  border-radius: 9999px !important;
+  padding: 6px 14px !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(45, 200, 200, 0.3) !important;
+  font-size: 12px !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge:hover {
+  background: #26b3b3 !important;
+  box-shadow: 0 4px 16px rgba(45, 200, 200, 0.4) !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge svg {
+  stroke: #ffffff !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge .linkedcomment-badge-cta {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge:hover .linkedcomment-badge-cta {
+  background: rgba(255, 255, 255, 0.3) !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge .linkedcomment-badge-stats {
+  color: rgba(255, 255, 255, 0.9) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
+}
+.linkedcomment-xcom .linkedcomment-stat-num {
+  -webkit-text-fill-color: #ffffff !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge .linkedcomment-badge-dot {
+  background: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* X.com Hot tier (Orange pill) */
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="hot"] {
+  background: linear-gradient(135deg, #ff7a00 0%, #e06800 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 10px rgba(255, 122, 0, 0.3) !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="hot"]:hover {
+  background: linear-gradient(135deg, #e06800 0%, #cc5e00 100%) !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-badge-cta {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-badge-stats {
+  color: rgba(255, 255, 255, 0.9) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-stat-num {
+  -webkit-text-fill-color: #ffffff !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="hot"] svg {
+  stroke: #ffffff !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-badge-dot {
+  background: rgba(255, 255, 255, 0.5) !important;
+}
+
+/* X.com Viral tier (Pink pill) */
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="viral"] {
+  background: linear-gradient(135deg, #f91880 0%, #e01672 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 12px rgba(249, 24, 128, 0.35) !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="viral"]:hover {
+  background: linear-gradient(135deg, #e01672 0%, #c91365 100%) !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="viral"] svg {
+  stroke: #ffffff !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-cta {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-stats {
+  color: rgba(255, 255, 255, 0.9) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-stat-num {
+  -webkit-text-fill-color: #ffffff !important;
+}
+.linkedcomment-xcom .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-dot {
+  background: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* ─── X.com Widget (Light) ─── */
+.linkedcomment-xcom .linkedcomment-widget-header {
+  background: linear-gradient(135deg, #1d9bf0 0%, #0c7ecf 100%) !important;
+}
+.linkedcomment-xcom .linkedcomment-style-btn:hover {
+  border-color: #1d9bf0 !important;
+  color: #1d9bf0 !important;
+  -webkit-text-fill-color: #1d9bf0 !important;
+}
+.linkedcomment-xcom .linkedcomment-style-btn.active {
+  background: #1d9bf0 !important;
+  color: #fff !important;
+  -webkit-text-fill-color: #fff !important;
+  border-color: #1d9bf0 !important;
+}
+.linkedcomment-xcom .linkedcomment-angle:focus {
+  border-color: #1d9bf0 !important;
+}
+.linkedcomment-xcom .linkedcomment-gen-btn {
+  background: #1d9bf0 !important;
+}
+.linkedcomment-xcom .linkedcomment-gen-btn:hover {
+  background: #0c7ecf !important;
+}
+.linkedcomment-xcom .linkedcomment-spinner {
+  border-top-color: #1d9bf0 !important;
+}
+.linkedcomment-xcom .linkedcomment-btn-copy {
+  background: #1d9bf0 !important;
+}
+.linkedcomment-xcom .linkedcomment-btn-copy:hover {
+  background: #0c7ecf !important;
+}
+.linkedcomment-xcom .linkedcomment-btn-insert {
+  background: #00ba7c !important;
+}
+.linkedcomment-xcom .linkedcomment-btn-insert:hover {
+  background: #009e69 !important;
+}
+.linkedcomment-xcom .linkedcomment-btn-redo {
+  color: #1d9bf0 !important;
+  -webkit-text-fill-color: #1d9bf0 !important;
+  border-color: #1d9bf0 !important;
+}
+.linkedcomment-xcom .linkedcomment-btn-redo:hover {
+  background: #e8f5fd !important;
+}
+
+/* ─── X.com Dark Mode ─── */
+/* X.com Dark Trending (Teal) */
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge {
+  background: #1a3332 !important;
+  border: 1px solid #2a6b65 !important;
+  color: #5eead4 !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
+  backdrop-filter: none !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge:hover {
+  background: #1f3d3b !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6) !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge svg {
+  stroke: #5eead4 !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge .linkedcomment-badge-cta {
+  background: rgba(94, 234, 212, 0.15) !important;
+  color: #5eead4 !important;
+  -webkit-text-fill-color: #5eead4 !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge:hover .linkedcomment-badge-cta {
+  background: rgba(94, 234, 212, 0.25) !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge .linkedcomment-badge-stats {
+  color: rgba(94, 234, 212, 0.8) !important;
+  -webkit-text-fill-color: rgba(94, 234, 212, 0.8) !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-stat-num {
+  -webkit-text-fill-color: #5eead4 !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge .linkedcomment-badge-dot {
+  background: rgba(94, 234, 212, 0.4) !important;
+}
+
+/* X.com Dark Hot (Orange) */
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"] {
+  background: #3d2a14 !important;
+  border-color: #a06520 !important;
+  color: #ffb74d !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"]:hover {
+  background: #4a3218 !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"] svg {
+  stroke: #ffb74d !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-badge-stats {
+  color: rgba(255, 183, 77, 0.8) !important;
+  -webkit-text-fill-color: rgba(255, 183, 77, 0.8) !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-stat-num {
+  -webkit-text-fill-color: #ffb74d !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-badge-cta {
+  background: rgba(255, 183, 77, 0.15) !important;
+  color: #ffb74d !important;
+  -webkit-text-fill-color: #ffb74d !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="hot"] .linkedcomment-badge-dot {
+  background: rgba(255, 183, 77, 0.5) !important;
+}
+
+/* X.com Dark Viral (Pink) */
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"] {
+  background: linear-gradient(135deg, #f91880 0%, #e01672 100%) !important;
+  border: none !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 12px rgba(249, 24, 128, 0.3) !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"]:hover {
+  background: linear-gradient(135deg, #e01672 0%, #c91365 100%) !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"] svg {
+  stroke: #ffffff !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-stats {
+  color: rgba(255, 255, 255, 0.9) !important;
+  -webkit-text-fill-color: rgba(255, 255, 255, 0.9) !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-stat-num {
+  -webkit-text-fill-color: #ffffff !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-cta {
+  background: rgba(255, 255, 255, 0.2) !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-reach-badge[data-tier="viral"] .linkedcomment-badge-dot {
+  background: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* X.com Dark Widget */
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-widget {
+  background: #15202b !important;
+  border-color: #38444d !important;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 2px 8px rgba(0,0,0,0.4) !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-widget-header {
+  background: linear-gradient(135deg, #1a3550 0%, #0f2337 100%) !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-widget-body {
+  background: #15202b !important;
+  color: #e7e9ea !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-widget-body * {
+  color: inherit !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+/* X.com Dark style pills */
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-style-btn {
+  background: #273340 !important;
+  border-color: #38444d !important;
+  color: #8b98a5 !important;
+  -webkit-text-fill-color: #8b98a5 !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-style-btn:hover {
+  border-color: #1d9bf0 !important;
+  color: #1d9bf0 !important;
+  -webkit-text-fill-color: #1d9bf0 !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-style-btn.active {
+  background: #1d9bf0 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+  border-color: #1d9bf0 !important;
+}
+
+/* X.com Dark input */
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-angle {
+  background: #273340 !important;
+  border-color: #38444d !important;
+  color: #e7e9ea !important;
+  -webkit-text-fill-color: #e7e9ea !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-angle:focus {
+  border-color: #1d9bf0 !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-angle::placeholder {
+  color: #6e767d !important;
+  -webkit-text-fill-color: #6e767d !important;
+}
+
+/* X.com Dark generate button */
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-gen-btn {
+  background: #1d9bf0 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-gen-btn:hover {
+  background: #4db5f5 !important;
+}
+
+/* X.com Dark spinner */
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-spinner {
+  border-color: #38444d !important;
+  border-top-color: #1d9bf0 !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-loading {
+  color: #6e767d !important;
+  -webkit-text-fill-color: #6e767d !important;
+}
+
+/* X.com Dark error */
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-error {
+  background: #3d1f1f !important;
+  border-color: #6b2a2a !important;
+  color: #f4212e !important;
+  -webkit-text-fill-color: #f4212e !important;
+}
+
+/* X.com Dark comment box */
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-comment-box {
+  background: #273340 !important;
+  border-color: #38444d !important;
+  color: #e7e9ea !important;
+  -webkit-text-fill-color: #e7e9ea !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-comment-box p {
+  color: #e7e9ea !important;
+  -webkit-text-fill-color: #e7e9ea !important;
+}
+
+/* X.com Dark action buttons */
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-btn-copy {
+  background: #1d9bf0 !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-btn-copy:hover {
+  background: #4db5f5 !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-btn-insert {
+  background: #00ba7c !important;
+  color: #ffffff !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-btn-insert:hover {
+  background: #34d399 !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-btn-redo {
+  background: #273340 !important;
+  color: #1d9bf0 !important;
+  -webkit-text-fill-color: #1d9bf0 !important;
+  border-color: #1d9bf0 !important;
+}
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-btn-redo:hover {
+  background: #2c3c4d !important;
+}
+
+/* X.com Dark no model warning */
+.linkedcomment-xcom.linkedcomment-dark .linkedcomment-no-model {
+  color: #f4212e !important;
+  -webkit-text-fill-color: #f4212e !important;
+}
+
+/* X.com Dark toast */
+.linkedcomment-xcom.linkedcomment-dark #linkedcomment-toast {
+  background: #e7e9ea !important;
+  color: #0f1419 !important;
 }
