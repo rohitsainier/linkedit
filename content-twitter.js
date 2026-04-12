@@ -633,21 +633,30 @@ Rules:
         if (!lastComment) return;
         window.__linkedcomment_lastPost = postEl;
 
-        let box = findCommentBox(postEl);
+        // First try finding an already-open reply box globally (modal or inline)
+        let box = document.querySelector('[data-testid="tweetTextarea_0"] [role="textbox"][contenteditable="true"]') ||
+                  document.querySelector('[aria-modal="true"] [role="textbox"][contenteditable="true"]') ||
+                  document.querySelector('[role="dialog"] [role="textbox"][contenteditable="true"]') ||
+                  findCommentBox(postEl);
+
         if (!box) {
           const opened = openCommentBox(postEl);
           if (opened) {
             let retries = 0;
-            const maxRetries = 5;
+            const maxRetries = 8;
             const tryFind = () => {
-              box = findCommentBox(postEl);
+              // Search globally — X.com reply opens in modal
+              box = document.querySelector('[data-testid="tweetTextarea_0"] [role="textbox"][contenteditable="true"]') ||
+                    document.querySelector('[aria-modal="true"] [role="textbox"][contenteditable="true"]') ||
+                    document.querySelector('[role="dialog"] [role="textbox"][contenteditable="true"]') ||
+                    findCommentBox(postEl);
               if (box) {
                 insertText(box, lastComment);
                 showToast('Reply inserted!');
                 closeActiveWidget();
               } else if (retries < maxRetries) {
                 retries++;
-                setTimeout(tryFind, 400 * retries);
+                setTimeout(tryFind, 300 * retries);
               } else {
                 showToast('Reply box not found. Click "Reply" first.');
               }
@@ -722,6 +731,468 @@ Rules:
     highReach.badgeCount++;
   }
 
+  // ─── Comment Analytics ───
+
+  // Check if we're on a tweet detail/thread page (URL like /status/123)
+  function isThreadView() {
+    return /\/status\/\d+/.test(window.location.pathname);
+  }
+
+  // Scrape currently visible replies from DOM and add to accumulator
+  function scrapeVisibleRepliesInto(accumulated, seenTexts) {
+    const allCells = document.querySelectorAll('[data-testid="cellInnerDiv"]');
+    let foundMainTweet = false;
+    let newCount = 0;
+
+    for (const cell of allCells) {
+      const article = cell.querySelector('article[data-testid="tweet"]');
+      if (!article) continue;
+
+      // Skip the main/original tweet (first article in thread)
+      if (!foundMainTweet) {
+        foundMainTweet = true;
+        continue;
+      }
+
+      const textEl = article.querySelector('[data-testid="tweetText"]');
+      const nameEl = article.querySelector('[data-testid="User-Name"]');
+      const text = textEl?.textContent?.trim();
+      if (text && !seenTexts.has(text)) {
+        seenTexts.add(text);
+        const author = nameEl?.textContent?.trim()?.split('\n')[0] || 'Unknown';
+        accumulated.push({ author, text });
+        newCount++;
+      }
+    }
+
+    return newCount;
+  }
+
+  // Auto-scroll to load ALL replies, accumulating as we go
+  // X.com uses virtualized rendering — old replies get removed from DOM as you scroll
+  // So we must capture them on each scroll before they disappear
+  async function scrapeRepliesWithScroll(statusCallback) {
+    const scrollDelay = 1000;
+    const accumulated = [];
+    const seenTexts = new Set();
+    let staleRounds = 0;
+    const maxStale = 4;
+
+    // Capture initial visible replies
+    scrapeVisibleRepliesInto(accumulated, seenTexts);
+    if (statusCallback) statusCallback(accumulated.length);
+
+    // Scroll until no more replies load
+    while (true) {
+      const prevCount = accumulated.length;
+
+      // Scroll down
+      window.scrollBy(0, window.innerHeight * 0.8);
+      await new Promise(r => setTimeout(r, scrollDelay));
+
+      // Scrape newly visible replies into our accumulator
+      scrapeVisibleRepliesInto(accumulated, seenTexts);
+      if (statusCallback) statusCallback(accumulated.length);
+
+      if (accumulated.length === prevCount) {
+        staleRounds++;
+        if (staleRounds >= maxStale) {
+          log(`No new replies after ${maxStale} scrolls, all ${accumulated.length} replies captured`);
+          break;
+        }
+      } else {
+        staleRounds = 0;
+      }
+    }
+
+    // Scroll back to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    log(`Total scraped: ${accumulated.length} replies`);
+    return accumulated;
+  }
+
+  // Navigate to tweet thread page by clicking the tweet
+  function navigateToThread(postEl) {
+    // Find a clickable link to the tweet's status page
+    const timeLink = postEl.querySelector('a[href*="/status/"] time')?.closest('a');
+    if (timeLink) {
+      timeLink.click();
+      return true;
+    }
+    // Fallback: find any link with /status/
+    const statusLink = postEl.querySelector('a[href*="/status/"]');
+    if (statusLink && !statusLink.closest('[data-testid="User-Name"]')) {
+      statusLink.click();
+      return true;
+    }
+    return false;
+  }
+
+  const ANALYSIS_SYSTEM_PROMPT = `You are a social media analytics expert. Analyze the replies to an X.com post and return ONLY a valid JSON object with no additional text, markdown, or code fences.
+
+The JSON must have this exact structure:
+{
+  "sentiment": { "positive": <number 0-100>, "negative": <number 0-100>, "neutral": <number 0-100>, "summary": "<1 sentence>" },
+  "themes": ["<theme 1>", "<theme 2>", "<theme 3>"],
+  "audienceInsights": "<2-3 sentences about who is engaging and how>",
+  "engagementQuality": { "score": <number 1-10>, "summary": "<1 sentence>" },
+  "gapFinder": ["<untapped angle 1>", "<untapped angle 2>", "<untapped angle 3>"],
+  "smartReplies": [
+    { "angle": "<brief label>", "reply": "<actual reply text under 280 chars>" },
+    { "angle": "<brief label>", "reply": "<actual reply text under 280 chars>" },
+    { "angle": "<brief label>", "reply": "<actual reply text under 280 chars>" }
+  ]
+}`;
+
+  let analysisPanel = null;
+
+  function closeAnalysisPanel() {
+    if (analysisPanel) {
+      analysisPanel.classList.add('closing');
+      setTimeout(() => {
+        analysisPanel?.remove();
+        analysisPanel = null;
+      }, 250);
+    }
+  }
+
+  function showAnalysisPanel(postEl, postText, replies) {
+    closeAnalysisPanel();
+
+    const overlay = document.createElement('div');
+    overlay.className = 'linkedcomment-analysis-overlay';
+    analysisPanel = overlay;
+
+    const replyCount = replies.length;
+
+    overlay.innerHTML = `
+      <div class="linkedcomment-analysis-dim"></div>
+      <div class="linkedcomment-analysis-panel">
+        <div class="linkedcomment-analysis-header">
+          <div>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>
+            <span>Comment Analysis</span>
+          </div>
+          <div class="linkedcomment-analysis-meta">${replyCount > 0 ? replyCount + ' replies analyzed' : 'Loading replies...'}</div>
+          <button class="linkedcomment-analysis-close"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="linkedcomment-analysis-body">
+          <div class="linkedcomment-analysis-loading">
+            <div class="linkedcomment-spinner"></div>
+            <span>${replyCount > 0 ? `Analyzing ${replyCount} replies...` : 'Scrolling to load replies...'}</span>
+          </div>
+        </div>
+      </div>
+    `;
+
+    overlay.querySelector('.linkedcomment-analysis-dim').addEventListener('click', closeAnalysisPanel);
+    overlay.querySelector('.linkedcomment-analysis-close').addEventListener('click', closeAnalysisPanel);
+
+    document.body.appendChild(overlay);
+
+    // If replies already provided, trigger analysis immediately
+    if (replies.length >= 2) {
+      triggerAnalysis(overlay, postEl, postText, replies);
+    }
+  }
+
+  function triggerAnalysis(overlay, postEl, postText, replies) {
+    // Update loading text
+    const loadingSpan = overlay.querySelector('.linkedcomment-analysis-loading span');
+    if (loadingSpan) loadingSpan.textContent = `Analyzing ${replies.length} replies with AI...`;
+
+    const replyList = replies.map((r, i) => `${i + 1}. @${r.author}: "${r.text}"`).join('\n');
+
+    chrome.storage.local.get(['aiProvider', 'ollamaUrl', 'ollamaModel', 'openaiApiKey', 'openaiModel', 'geminiApiKey', 'geminiModel', 'claudeApiKey', 'claudeModel'], (settings) => {
+      const provider = settings.aiProvider || 'ollama';
+      const ollamaUrl = (settings.ollamaUrl || 'http://localhost:11434').replace(/\/+$/, '');
+      const modelKeys = { ollama: 'ollamaModel', openai: 'openaiModel', gemini: 'geminiModel', claude: 'claudeModel' };
+      const apiKeyKeys = { openai: 'openaiApiKey', gemini: 'geminiApiKey', claude: 'claudeApiKey' };
+      const model = settings[modelKeys[provider]] || '';
+      const apiKey = provider !== 'ollama' ? (settings[apiKeyKeys[provider]] || '') : '';
+
+      if (!model || (provider !== 'ollama' && !apiKey)) {
+        renderAnalysisError(overlay, 'No AI provider configured. Open LinkedComment settings.');
+        return;
+      }
+
+      // Send as many replies as possible (up to ~12K chars to stay within token limits)
+      const maxReplyChars = 12000;
+      let truncatedReplyList = replyList;
+      let repliesIncluded = replies.length;
+      if (replyList.length > maxReplyChars) {
+        truncatedReplyList = replyList.substring(0, maxReplyChars);
+        // Count how many complete replies fit
+        repliesIncluded = (truncatedReplyList.match(/^\d+\./gm) || []).length;
+        truncatedReplyList += `\n... (${replies.length - repliesIncluded} more replies truncated for context limit)`;
+      }
+
+      const userPrompt = `Analyze these replies to the following X.com post (${replies.length} total replies, ${repliesIncluded} shown):\n\nOriginal post: "${postText.substring(0, 1000)}"\n\nReplies:\n${truncatedReplyList}\n\nReturn ONLY the JSON object, no other text.`;
+
+      chrome.runtime.sendMessage({
+        action: 'aiGenerate',
+        provider,
+        model,
+        apiKey,
+        ollamaUrl,
+        systemPrompt: ANALYSIS_SYSTEM_PROMPT,
+        userPrompt
+      }, (response) => {
+        if (chrome.runtime.lastError || !response?.ok) {
+          renderAnalysisError(overlay, response?.error || 'Analysis failed. Try again.');
+          return;
+        }
+        try {
+          let jsonStr = response.data.trim();
+          jsonStr = jsonStr.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+          const data = JSON.parse(jsonStr);
+          renderAnalysisResults(overlay, postEl, data);
+        } catch (err) {
+          log('JSON parse error:', err, 'Raw:', response.data);
+          renderAnalysisError(overlay, 'Failed to parse analysis. Try a different model.');
+        }
+      });
+    });
+  }
+
+  function renderAnalysisError(overlay, message) {
+    const body = overlay.querySelector('.linkedcomment-analysis-body');
+    if (!body) return;
+    body.innerHTML = `<div class="linkedcomment-analysis-error">${message}</div>`;
+  }
+
+  function renderAnalysisResults(overlay, postEl, data) {
+    const body = overlay.querySelector('.linkedcomment-analysis-body');
+    if (!body) return;
+
+    const s = data.sentiment || { positive: 0, negative: 0, neutral: 0, summary: '' };
+    const themes = data.themes || [];
+    const audience = data.audienceInsights || '';
+    const eq = data.engagementQuality || { score: 0, summary: '' };
+    const gaps = data.gapFinder || [];
+    const smartReplies = data.smartReplies || [];
+
+    const eqColor = eq.score >= 7 ? '#34d399' : eq.score >= 4 ? '#fbbf24' : '#f87171';
+
+    body.innerHTML = `
+      <!-- Sentiment -->
+      <div class="linkedcomment-analysis-section">
+        <h3>Sentiment</h3>
+        <div class="linkedcomment-sentiment-bars">
+          <div class="linkedcomment-sentiment-row">
+            <span class="linkedcomment-sentiment-label">Positive</span>
+            <div class="linkedcomment-sentiment-bar"><div class="linkedcomment-sentiment-fill" style="width:${s.positive}%; background:#34d399;"></div></div>
+            <span class="linkedcomment-sentiment-pct">${s.positive}%</span>
+          </div>
+          <div class="linkedcomment-sentiment-row">
+            <span class="linkedcomment-sentiment-label">Negative</span>
+            <div class="linkedcomment-sentiment-bar"><div class="linkedcomment-sentiment-fill" style="width:${s.negative}%; background:#f87171;"></div></div>
+            <span class="linkedcomment-sentiment-pct">${s.negative}%</span>
+          </div>
+          <div class="linkedcomment-sentiment-row">
+            <span class="linkedcomment-sentiment-label">Neutral</span>
+            <div class="linkedcomment-sentiment-bar"><div class="linkedcomment-sentiment-fill" style="width:${s.neutral}%; background:#6b7280;"></div></div>
+            <span class="linkedcomment-sentiment-pct">${s.neutral}%</span>
+          </div>
+        </div>
+        ${s.summary ? `<p class="linkedcomment-analysis-summary">${s.summary}</p>` : ''}
+      </div>
+
+      <!-- Key Themes -->
+      <div class="linkedcomment-analysis-section">
+        <h3>Key Themes</h3>
+        <div class="linkedcomment-theme-pills">
+          ${themes.map(t => `<span class="linkedcomment-theme-pill">${t}</span>`).join('')}
+        </div>
+      </div>
+
+      <!-- Audience Insights -->
+      <div class="linkedcomment-analysis-section">
+        <h3>Audience Insights</h3>
+        <p class="linkedcomment-analysis-text">${audience}</p>
+      </div>
+
+      <!-- Engagement Quality -->
+      <div class="linkedcomment-analysis-section">
+        <h3>Engagement Quality</h3>
+        <div class="linkedcomment-eq-score">
+          <div class="linkedcomment-eq-num" style="color:${eqColor};">${eq.score}/10</div>
+          <p class="linkedcomment-analysis-text">${eq.summary}</p>
+        </div>
+      </div>
+
+      <!-- Gap Finder -->
+      <div class="linkedcomment-analysis-section">
+        <h3>Untapped Angles</h3>
+        <ul class="linkedcomment-gap-list">
+          ${gaps.map(g => `<li>${g}</li>`).join('')}
+        </ul>
+      </div>
+
+      <!-- Smart Replies -->
+      ${smartReplies.length > 0 ? `
+      <div class="linkedcomment-analysis-section linkedcomment-smart-replies-section">
+        <h3>Smart Reply Suggestions</h3>
+        ${smartReplies.map((sr, i) => `
+          <div class="linkedcomment-smart-reply-card" data-index="${i}">
+            <div class="linkedcomment-smart-reply-angle">${sr.angle}</div>
+            <div class="linkedcomment-smart-reply-text">${sr.reply}</div>
+            <div class="linkedcomment-smart-reply-actions">
+              <button class="linkedcomment-sr-copy" data-reply="${sr.reply.replace(/"/g, '&quot;')}">Copy</button>
+              <button class="linkedcomment-sr-use" data-reply="${sr.reply.replace(/"/g, '&quot;')}">Use</button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      ` : ''}
+    `;
+
+    // Wire up smart reply buttons
+    body.querySelectorAll('.linkedcomment-sr-copy').forEach(btn => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const text = btn.dataset.reply;
+        try { await navigator.clipboard.writeText(text); } catch {
+          const ta = document.createElement('textarea');
+          ta.value = text; ta.style.cssText = 'position:fixed;left:-9999px';
+          document.body.appendChild(ta); ta.select();
+          document.execCommand('copy'); document.body.removeChild(ta);
+        }
+        btn.textContent = 'Copied!';
+        setTimeout(() => { btn.textContent = 'Copy'; }, 1200);
+        showToast('Reply copied!');
+      });
+    });
+
+    body.querySelectorAll('.linkedcomment-sr-use').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const text = btn.dataset.reply;
+
+        // Close analysis panel first so it doesn't block the reply modal
+        closeAnalysisPanel();
+
+        // Find the current main tweet on the page (postEl may be stale after scrolling)
+        const currentPost = document.querySelector('article[data-testid="tweet"]');
+        if (!currentPost) {
+          // Fallback: just copy to clipboard
+          navigator.clipboard.writeText(text).then(() => showToast('Reply copied! Paste it manually.'));
+          return;
+        }
+
+        // Click the reply button
+        const replyBtn = currentPost.querySelector('[data-testid="reply"]') ||
+                         currentPost.querySelector('button[aria-label="Reply"]');
+        if (replyBtn) {
+          replyBtn.click();
+
+          // Wait for reply modal/textbox to appear, then insert
+          let retries = 0;
+          const tryInsert = () => {
+            // Search globally for the reply textbox — X.com opens it in a modal
+            const box = document.querySelector('[data-testid="tweetTextarea_0"] [role="textbox"][contenteditable="true"]') ||
+                        document.querySelector('[aria-modal="true"] [role="textbox"][contenteditable="true"]') ||
+                        document.querySelector('[role="dialog"] [role="textbox"][contenteditable="true"]') ||
+                        document.querySelector('[role="textbox"][contenteditable="true"]');
+            if (box) {
+              insertText(box, text);
+              showToast('Reply inserted!');
+            } else if (retries < 8) {
+              retries++;
+              setTimeout(tryInsert, 300 * retries);
+            } else {
+              navigator.clipboard.writeText(text).then(() => showToast('Reply copied! Paste it manually.'));
+            }
+          };
+          setTimeout(tryInsert, 500);
+        } else {
+          // Can't find reply button — copy to clipboard as fallback
+          navigator.clipboard.writeText(text).then(() => showToast('Reply copied! Paste it manually.'));
+        }
+      });
+    });
+  }
+
+  function injectAnalyzeButton(postEl) {
+    if (postEl.querySelector('.linkedcomment-analyze-btn')) return;
+
+    const computed = window.getComputedStyle(postEl);
+    if (computed.position === 'static') {
+      postEl.style.position = 'relative';
+    }
+
+    const btn = document.createElement('button');
+    btn.className = 'linkedcomment-analyze-btn';
+    btn.title = 'Analyze replies';
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg>';
+
+    btn.addEventListener('click', async (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+
+      const postText = extractPostText(postEl);
+      if (!postText) {
+        showToast('Could not extract tweet text.');
+        return;
+      }
+
+      // If we're on the feed (not thread view), navigate to the thread first
+      if (!isThreadView()) {
+        showToast('Opening thread to load replies...');
+        const navigated = navigateToThread(postEl);
+        if (navigated) {
+          // Wait for thread page to load, then auto-trigger analysis
+          setTimeout(async () => {
+            // On thread page now — find the main tweet and scrape
+            const mainTweet = document.querySelector('article[data-testid="tweet"]');
+            const threadPostText = mainTweet ? extractPostText(mainTweet) : postText;
+
+            showAnalysisPanel(mainTweet || postEl, threadPostText || postText, []);
+
+            // Start scraping with scroll
+            const replies = await scrapeRepliesWithScroll((count) => {
+              const meta = document.querySelector('.linkedcomment-analysis-meta');
+              if (meta) meta.textContent = `Loading... ${count} replies found`;
+            });
+
+            if (replies.length < 2) {
+              renderAnalysisError(analysisPanel, 'Not enough replies found (need 2+). Try a tweet with more comments.');
+              return;
+            }
+
+            // Update count and trigger AI analysis
+            const meta = document.querySelector('.linkedcomment-analysis-meta');
+            if (meta) meta.textContent = `${replies.length} replies analyzed`;
+            triggerAnalysis(analysisPanel, mainTweet || postEl, threadPostText || postText, replies);
+          }, 2000);
+        } else {
+          showToast('Could not open thread. Click into the tweet manually first.');
+        }
+        return;
+      }
+
+      // Already on thread page — scrape with auto-scroll
+      showAnalysisPanel(postEl, postText, []);
+
+      const replies = await scrapeRepliesWithScroll((count) => {
+        const meta = document.querySelector('.linkedcomment-analysis-meta');
+        if (meta) meta.textContent = `Loading... ${count} replies found`;
+      });
+
+      if (replies.length < 2) {
+        renderAnalysisError(analysisPanel, 'Not enough replies found (need 2+). Try a tweet with more comments.');
+        return;
+      }
+
+      const meta = document.querySelector('.linkedcomment-analysis-meta');
+      if (meta) meta.textContent = `${replies.length} replies analyzed`;
+      triggerAnalysis(analysisPanel, postEl, postText, replies);
+    });
+
+    postEl.appendChild(btn);
+  }
+
   function processPost(postEl) {
     if (postEl.hasAttribute('data-linkedcomment-processed')) return;
     postEl.setAttribute('data-linkedcomment-processed', 'true');
@@ -735,6 +1206,7 @@ Rules:
 
     if (engagement.reactions >= t.reactions || engagement.comments >= t.comments || engagement.reposts >= t.reposts) {
       injectBadge(postEl, engagement);
+      injectAnalyzeButton(postEl);
     }
   }
 
